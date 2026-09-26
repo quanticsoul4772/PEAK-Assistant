@@ -129,7 +129,7 @@ if "code" in query_params and "state" in query_params:
             logger.debug(f"User ID: {auth_data.get('user_id', 'Not set')}")
             logger.debug(f"Auth type: {auth_data.get('auth_type', 'Not set')}")
             if auth_data.get("access_token"):
-                logger.debug(f"Access token present: {auth_data['access_token'][:20]}...")
+                logger.debug("Access token present: True")
             else:
                 logger.debug("No access token - only authorization code stored")
             

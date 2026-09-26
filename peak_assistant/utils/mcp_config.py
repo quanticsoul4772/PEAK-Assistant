@@ -771,7 +771,12 @@ class MCPConfigManager:
                     "type": server_config.auth.type.value,
                     "requires_user_auth": server_config.auth.requires_user_auth
                 }
-                for field in ["token", "client_id", "client_secret", "scope", "token_url", "authorization_url", "redirect_uri", "client_registration_url", "api_key", "header_name"]:
+                # Secret fields (token, client_secret, api_key) are deliberately
+                # never written back to disk: in-memory values are
+                # env-interpolated, so persisting them would convert "${VAR}"
+                # placeholders into literal credentials in the config file.
+                # Secrets must be re-supplied via environment interpolation.
+                for field in ["client_id", "scope", "token_url", "authorization_url", "redirect_uri", "client_registration_url", "header_name"]:
                     if hasattr(server_config.auth, field) and getattr(server_config.auth, field) is not None:
                         auth_dict[field] = getattr(server_config.auth, field)
                 config_dict["auth"] = auth_dict
