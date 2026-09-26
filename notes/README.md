@@ -1,0 +1,69 @@
+# notes/ — PEAK x mcp-parallax research workspace
+
+Research and design documents for integrating `mcp-parallax` (a Rust MCP server of
+LLM "correctives") into PEAK-Assistant as an opt-in verification layer. These are
+planning artifacts only — no code changes to PEAK are proposed here yet.
+
+**Scope note:** everything in these docs was verified against the local source
+checkouts listed below on 2026-09-26. Carried-over claims that did not survive
+verification are marked **Correction** in `peak-parallax-research-notes.md`.
+Claims that could not be confirmed are marked **TODO** (none currently).
+`mcp-reasoning` is explicitly out of scope for design; it appears for context only.
+
+## Resolved local paths (discovered, not assumed)
+
+| Repo | Local path | Role |
+|------|-----------|------|
+| PEAK-Assistant (fork) | `D:\Projects\PEAK-Assistant` | this repo; docs land in `notes/` |
+| mcp-parallax | `C:\Development\Projects\MCP\project-root\mcp-servers\mcp-parallax` | READ-ONLY research input |
+| mcp-reasoning | `C:\Development\Projects\MCP\project-root\mcp-servers\mcp-reasoning` | READ-ONLY research input (out of scope) |
+
+Discovery note: two red-herring paths exist on this machine and are **not** the
+checkouts — `C:\Users\rbsmi\.config\manicode\projects\mcp-parallax` (chat
+metadata only) and `D:\Projects\rawcell-agent\mcp-reasoning` (empty directory;
+an uninitialized gitlink inside the rawcell-agent repo). The real checkouts were
+located via agent-tool cache paths pointing at
+`C:\Development\Projects\MCP\project-root\mcp-servers\`.
+
+## Provenance (captured 2026-09-26T11:59:34-07:00)
+
+| Repo | HEAD | Commit date | Branch checked out | Tree state |
+|------|------|-------------|--------------------|------------|
+| PEAK-Assistant (D:\Projects\PEAK-Assistant) | `dfabbb0fbcc27292ecbb8e32beeccda372bc0783` | 2026-06-01 | `notes/research` (cut from `upstream/main`) | clean |
+| mcp-parallax | `a539aacc49ae6e0b5f21fd33a2cda856c223da29` | 2026-07-28 | `053-diverge-pass-count` (NOT main) | **dirty — 13 modified files** |
+| mcp-reasoning | `678d7112a3cc30c846fc51ace64c3ca3e97d5186` | 2026-09-09 | `fix/retired-sonnet4-default` (NOT main) | clean |
+
+Remotes: PEAK fork `origin` = `https://github.com/quanticsoul4772/PEAK-Assistant.git`,
+`upstream` = `https://github.com/Cisco-Talos/PEAK-Assistant.git`.
+mcp-parallax and mcp-reasoning origins are `quanticsoul4772/mcp-parallax` and
+`quanticsoul4772/mcp-reasoning` respectively.
+
+**Dirty state of mcp-parallax (read as-is, per handoff rules — nothing stashed,
+reset, or modified):** `CHANGELOG.md`, `CLAUDE.md`, `README.md`,
+`examples/common/mod.rs`, `specs/012-diverge-perspectives/contracts/diverge.md`,
+`specs/012-diverge-perspectives/research.md`, `specs/012-diverge-perspectives/spec.md`,
+`src/config.rs`, `src/main.rs`, `src/modes/diverge.rs`, `src/modes/mod.rs`,
+`src/server.rs`, `tests/integration.rs`. All findings below describe the working
+tree as read on 2026-09-26, which may differ from commit `a539aacc`.
+
+Both MCP checkouts were left untouched (no fetch, no edits). Their SHAs refer to
+local state; local branches may be behind their remotes.
+
+## Documents
+
+1. `peak-parallax-research-notes.md` — verified research findings, phase mapping,
+   corrections to the carried-over brief.
+2. `parallax-byom-design.md` — design for making mcp-parallax provider-agnostic
+   (BYOM), with migration and test plans.
+3. `peak-integration-issue-draft.md` — draft PEAK GitHub issue: opt-in
+   heterogeneous verification layer.
+4. `roadmap.md` — M0–M4 milestones and first-week checklist.
+
+## Branch strategy (this repo)
+
+- `main` — tracks `upstream/main`; never commit work here.
+- `notes/research` — this branch; long-lived home for these docs.
+- `feat/<name>` — short-lived PR branches cut from fresh `upstream/main`.
+
+Do not commit `.env`, `model_config.json`/`mcp_servers.json` edits, TLS certs, or
+anything from the MCP server checkouts into this fork.
