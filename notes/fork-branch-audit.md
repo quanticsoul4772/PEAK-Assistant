@@ -69,6 +69,17 @@ If these merge upstream, a fork sync delivers them. Keep no local copies.
 
 ### D. HARVEST-then-DELETE — fixes absent from `main`, upstream PRs closed unmerged (11 branches)
 
+**Post-review correction (2026-09-26, see PR #3):** `git cherry` measures
+*patch* equivalence only. When the 7 high-value candidates were cherry-picked
+for review, **5 turned out semantically superseded** by main's June dev merge
+(PR #92) and were dropped: the Dockerfile fix (main copies Node 20 from the
+official `node:20-slim` image), the auth_module restriction (main has a
+deny-by-default `PEAK_AUTH_MODULE_ALLOWLIST`), the logging fix (main threads
+`debug_agents: bool = False`), the context.txt fix (main's code is identical),
+and the refiner error handling (main's try/except is a superset). **Only 2 were
+genuinely missing** and are harvested in PR #3: the `.env` CWD-only hardening
+and the HTTP MCP auth failure check. The CI/registry four were not evaluated.
+
 These are real fixes the maintainer's Codex runs proposed and **closed without
 merging** (PRs #54–#83 series). `git cherry` says their patches are NOT in main.
 Since our fork is now our own product, these are free to take — but each was
@@ -105,10 +116,11 @@ reviewed-and-not-merged upstream, so **read before you take**.
 1. ~~**Delete categories A + B + C now (21 branches).**~~ **Done 2026-09-26**
    (verified: fork now has exactly `main`, `notes/research`, and the 11
    category-D branches).
-2. **Harvest category D (7 branches: "high value" + "security hardening") into a
-   `fork-maintenance` branch:** cherry-pick each one commit, review the diff,
-   run `make checks` + pytest, then merge via our own fork PR. Skip the CI/registry
-   four unless we plan to publish images.
+2. ~~**Harvest category D (7 branches: "high value" + "security hardening") into a
+   `fork-maintenance` branch**~~ **Done 2026-09-26 (PR #3) — outcome: 2 taken,
+   5 dropped as superseded (see correction above).** All remaining category-D
+   branches can now be deleted too: the 2 harvested fixes live on
+   `fork-maintenance`.
 3. **Delete the remaining D branches after harvest** (or immediately if you
    decide not to take any — they live on upstream regardless).
 4. **Never push any of this upstream.** Fork-only policy applies (README).
