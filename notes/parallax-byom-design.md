@@ -156,7 +156,7 @@ PARALLAX_EFFORT_<SITE|TIER>                        # unchanged; adapters that
 1. **Land the seam:** factory + `OpenAiCompatClient` + config parsing. All 12
    routed sites automatically work through the factory (they receive
    `Arc<dyn ModelClient>` from `ClientPool::for_site`).
-2. **Audit the 13th physical call:** `memory/consolidate.rs:239` (consolidation
+2. **Audit the unrouted physical call:** `memory/consolidate.rs:239` (consolidation
    judge) borrows the Verify client — confirm it inherits the new backend with
    no special casing (expected: yes, verified wiring at server.rs:315).
 3. **Wire-format parity tests per site** (§5) before declaring any site
@@ -237,8 +237,9 @@ group (verify, check, research, memory) on a real OpenAI-compatible endpoint.
 - [ ] `ANTHROPIC_API_KEY` no longer required when a non-anthropic backend is
       selected; startup still fails fast on missing/invalid config.
 - [ ] Taxonomy parity tests green for all `AppError` variants on both backends.
-- [ ] All 13 physical call sites covered by per-site request-shape + happy-path
-      tests (offline).
+- [ ] All 12 physical call sites covered (13 LLM-backed operations: 12 routed
+      + memory consolidation) by per-site request-shape + happy-path tests
+      (offline).
 - [ ] Token accounting verified per site; mispricing warnings documented.
 - [ ] README config section updated; no credentials in any example.
 - [ ] `cargo test` green offline; live smoke opt-in only.

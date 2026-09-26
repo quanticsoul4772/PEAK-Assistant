@@ -26,8 +26,9 @@ Per `parallax-byom-design.md`:
 - ⬜ `PARALLAX_BACKEND` config + factory in `src/client/mod.rs`.
 - ⬜ `OpenAiCompatClient` adapter with structured-output strategy ladder.
 - ⬜ Error-taxonomy parity tests (Truncation/Refusal/Client mapping) per backend.
-- ⬜ Per-call-site request-shape + happy-path tests for all 13 physical call
-  sites (12 routed + memory consolidation borrowing Verify's client).
+- ⬜ Per-call-site request-shape + happy-path tests for all 12 physical call
+  sites (covering 13 LLM-backed operations: 12 routed + memory consolidation
+  borrowing Verify's client).
 - ⬜ Token-accounting mapping verified; zero-usage warning policy.
 - ⬜ `cargo test` green fully offline; live smoke opt-in.
 - ⬜ README/config docs updated.

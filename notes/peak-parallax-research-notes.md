@@ -46,7 +46,9 @@ model configuration philosophy carries over.
   - `summary_critic`, `hunt_plan_critic`, `Discovery_Critic_Agent`,
     `hypothesis-refiner-critic` (MODEL_CONFIGURATION.md agent table, lines 110–125).
   - Critics are plain `AssistantAgent`s inside `RoundRobinGroupChat` teams with a
-    `TextMentionTermination` sentinel (e.g. `data_assistant/__init__.py:227–243`).
+    `TextMentionTermination` sentinel: `"YYY-HYPOTHESIS-ACCEPTED-YYY"` in the
+    hypothesis refiner (`hypothesis_refiner_cli.py:323`), `"YYY-TERMINATE-YYY"`
+    in data discovery (`data_assistant/__init__.py:227–243`).
 
 ### 2.3 Hypothesis phase — actual code (replaces all guessed paths)
 
@@ -59,6 +61,7 @@ model configuration philosophy carries over.
 Critic wiring *(verified, `hypothesis_refiner_cli.py:308–360`)*:
 
 ```python
+text_termination = TextMentionTermination("YYY-HYPOTHESIS-ACCEPTED-YYY")  # line 323
 team = RoundRobinGroupChat(
     [critic_agent, refiner_agent], termination_condition=text_termination
 )
@@ -141,13 +144,13 @@ are **absent** from the catalog without `VOYAGE_API_KEY`; `grounded_verify` is
 
 | Tool | Input | Output |
 |------|-------|--------|
-| `verify` | `VerifyParams { claim, context?, effort?: Effort, passes?: u8 }` (modes/verify.rs:102) | verdict + cross-pass agreement confidence + per-pass results |
-| `unstick` | `UnstickParams { goal, blocked (default), tried?: Vec<String>, effort? }` (modes/unstick.rs:50) | next-step suggestion |
-| `diverge` | `DivergeParams { problem, context?, effort?, ... }` (modes/diverge.rs:118) | alternative framings |
-| `decide` | `DecideParams { decision, options: Vec<String>, options_text?, context?, effort? }` (modes/decide.rs:78) | scored/selected option |
-| `elicit` | `ElicitParams { task, context?, effort? }` (modes/elicit.rs:84) | elicited requirements/questions |
+| `verify` | `VerifyParams { claim, context?, effort?: Effort, passes?: u8 }` (modes/verify.rs:102) | `Verdict { verdict: supported\|refuted, findings, confidence (server-computed agreement ratio), passes }` wrapped in `VerifyRun` (modes/verify.rs:155–182) |
+| `unstick` | `UnstickParams { goal, blocked (default), tried?: Vec<String>, effort? }` (modes/unstick.rs:50) | `UnstickRun { step: NextStep, tokens }` (modes/unstick.rs:117) |
+| `diverge` | `DivergeParams { problem, context?, effort?, ... }` (modes/diverge.rs:118) | `DivergeResult { perspectives: Vec<Perspective>, passes }` (modes/diverge.rs:175) |
+| `decide` | `DecideParams { decision, options: Vec<String>, options_text?, context?, effort? }` (modes/decide.rs:78) | `DecideResult { recommended, runner_up, runner_up_reason, confidence, methodology }` (modes/decide.rs:151) |
+| `elicit` | `ElicitParams { task, context?, effort? }` (modes/elicit.rs:84) | `ElicitResult { assumed_objective, governing_preferences, divergence_points, signal_level, memory_consulted }` (modes/elicit.rs:145) |
 | `check` | `CheckParams { claim, context?, effort? }` (deterministic/contract.rs:13) | `CheckResult { verdict: supported\|refuted\|not_checkable, engine, formal_form, engine_result, witness, explanation, reason?, translation_attempts }` (contract.rs:32) |
-| `grounded_verify` | `GroundedVerifyParams { claim, locators: Vec<SourceLocator>, ... }` (modes/grounded_verify.rs:123) | claim-vs-artifact verdicts |
+| `grounded_verify` | `GroundedVerifyParams { claim, locators: Vec<SourceLocator>, ... }` (modes/grounded_verify.rs:123) | aggregated `Verdict` (shares `aggregate_core` with `verify` — modes/verify.rs:166 comment) |
 | `save` | `SaveParams { content, kind: Kind, origin }` | `SaveResult` |
 | `recall` | `RecallParams { query, kind?, limit? }` | `RecallResult` (embedding similarity) |
 | `forget` | `ForgetParams { id }` | `ForgetResult` |
@@ -237,10 +240,12 @@ Physical `.complete()` call sites in production code (12 total):
 
 **Nuance 1:** RESEARCH_VERIFY does not have its own `.complete()`; it reuses
 `verify::run` with its own routed client. **Nuance 2:** memory consolidation
-(`memory/consolidate.rs:239`, the "keep-both-or-merge" judge) is a 13th
-*physical* LLM operation outside the routing table — it borrows
-`pool.for_site(CallSite::Verify)` (server.rs:315). A migration plan must cover
-this call even though the routed count stays 12.
+(`memory/consolidate.rs:239`, the "keep-both-or-merge" judge) has no `CallSite`
+of its own — it borrows `pool.for_site(CallSite::Verify)` (server.rs:315).
+**Counting:** 12 routed operations map onto 11 physical `.complete()` sites
+(verify.rs serves two), and consolidation adds one unrouted physical site —
+**12 physical sites, 13 LLM-backed operations total**. A migration plan must
+cover consolidation even though the routed count stays 12.
 
 ---
 
@@ -333,9 +338,9 @@ PR (M4). This should be stated openly in the PEAK issue (Doc 3).
 1. **`ModelClient` is already a trait** (`src/traits/client.rs:26`, with mockall
    automock), not a thin wrapper needing extraction. BYOM = second impl.
 2. **"12 call sites" confirmed** at the routing level (`CallSite::ALL`, exact
-   names), but the physical map has 12 `.complete()` sites with RESEARCH_VERIFY
-   sharing `verify::run` and a 13th physical LLM op (memory consolidation)
-   borrowing the Verify client.
+   names), but the physical map has 12 `.complete()` sites covering **13
+   LLM-backed operations**: RESEARCH_VERIFY shares `verify::run`, and memory
+   consolidation (unrouted) borrows the Verify client.
 3. **parallax env-var list incomplete** — see §3.4 for the full set.
 4. **`make checks` = ruff + mypy only**, not tests (`make coverage` runs pytest).
 5. **mcp-reasoning tool names corrected**: `reasoning_evidence`, `reasoning_detect`,

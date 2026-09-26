@@ -82,8 +82,10 @@ human.
   (`serverGroups` in `mcp_servers.json`); the integration surface is one PEAK
   already standardized on.
 - parallax's `grounded_verify`/`verify` return **structured verdicts**
-  (schema-validated JSON: verdict, engine, witness, explanation, confidence),
-  which is exactly the "structured/checkable contract" gap identified above.
+  (schema-validated JSON: verdict, named findings, server-computed agreement
+  confidence, completed-pass count — and from `check`, an auditable
+  `formal_form`/`engine_result`/`witness`/`explanation`), which is exactly the
+  "structured/checkable contract" gap identified above.
 - parallax is separately maintained; nothing needs to be vendored into PEAK.
 
 ## Scope of the first contribution
