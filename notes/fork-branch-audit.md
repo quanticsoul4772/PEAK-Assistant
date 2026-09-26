@@ -4,7 +4,9 @@
 `quanticsoul4772/PEAK-Assistant` (the fork). **Method:** SHA comparison against
 `Cisco-Talos/PEAK-Assistant` (read-only), `git merge-base --is-ancestor` vs
 `main`, `git cherry` patch-equivalence vs `main`, upstream PR history (read-only).
-**No branches were modified or deleted** — this document is recommendations only.
+**Status: categories A + B + C (21 branches) deleted from the fork on
+2026-09-26.** Category D (11 harvest candidates) remains pending the
+decision below. All deleted branches still exist on upstream — nothing lost.
 
 ## TL;DR — origin of the noise
 
@@ -100,9 +102,9 @@ reviewed-and-not-merged upstream, so **read before you take**.
 
 ## Recommendations
 
-1. **Delete categories A + B + C now (21 branches).** Zero information loss;
-   everything is in `main`, open upstream, or recoverable from `upstream/*`.
-   Leaves the fork as `main` + `notes/research` + the 11 harvest candidates.
+1. ~~**Delete categories A + B + C now (21 branches).**~~ **Done 2026-09-26**
+   (verified: fork now has exactly `main`, `notes/research`, and the 11
+   category-D branches).
 2. **Harvest category D (7 branches: "high value" + "security hardening") into a
    `fork-maintenance` branch:** cherry-pick each one commit, review the diff,
    run `make checks` + pytest, then merge via our own fork PR. Skip the CI/registry
