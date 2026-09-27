@@ -167,8 +167,13 @@ lateral movement inside the victim network." -r <research.md> -a <able.md> -c <c
    checks green): `RouteSource::Default` now records the backend's real default
    variable. Verified live — the startup table now prints
    `source=OPENAI_MODEL` on the Ollama backend.
-3. **PEAK CLI `-a`/`-c` are file paths**, not inline text, despite help text implying
-   inline values. Reproducibility quirk, not backend-related.
+3. **RESOLVED 2026-09-27** — PEAK CLI `-a`/`-c` (and planning's `-d`) are file paths,
+   not inline text, despite help text implying inline values. Fixed by aligning the
+   help text across all four CLIs (`data_assistant`, `planning_assistant`,
+   `able_assistant`, `hypothesis_refiner`) — "Path to the ... file" — pinned by
+   `tests/unit_tests/test_cli_help_path_parity.py` (8 tests). Inline-value support
+   was considered and rejected: a typo'd path silently becoming literal content is
+   worse than a loud "file not found".
 4. **Positive:** qwen2.5:7b (7B, local) held the full agent+critic loop — one real
    function call, a coherent index report, and correct `YYY-TERMINATE-YYY` termination
    with no `max_turns` set. The provider-agnostic seam works against a small local model.
