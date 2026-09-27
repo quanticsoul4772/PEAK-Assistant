@@ -1,7 +1,7 @@
 # Dependency CVE Audit — PEAK fork (Python lockfile)
 
-**Audited:** 2026-09-26 (point-in-time). **Remediated:** 2026-09-27 (Tiers 1–2
-done; Tier 3 targets corrected below). **Scope:** all pinned packages in
+**Audited:** 2026-09-26 (point-in-time). **Remediated:** 2026-09-27 (Tiers 1–3
+done). **Scope:** all pinned packages in
 `uv.lock` (exported via `uv export --all-groups` — the exact pins `uv sync`
 installs). **Source:** OSV.dev advisory database (batch query + per-advisory
 detail), cross-checked with PyPI for release metadata. Every reported advisory
@@ -28,10 +28,11 @@ query. Scratch scripts live in `.git/` and are not committed.
 |---|---|---|---|---|---|
 | 2026-09-26 baseline | 155 | 30 | 295 | 11 pkgs / 140 adv | 2 pkgs / 25 adv |
 | after Tier 1 (PR #5) | 158 | 19 | 155 | **0** | 2 pkgs / 25 adv |
-| after Tier 2 (this PR) | 158 | 17 | 130 | **0** | **0** |
+| after Tier 2 (PR #6) | 158 | 17 | 130 | **0** | **0** |
+| after Tier 3 (PR #7) | 158 | 1 | 2 | **0** | **0** |
 
-The remaining 17 packages / 130 advisories are all Tier 3 (plus `diskcache`,
-which has no fix). The pin count rose 155→158 because `mcp` 1.28.1 needs
+The last 2 advisories are `diskcache`, which has no fix (accepted risk below).
+The pin count rose 155→158 because `mcp` 1.28.1 needs
 `pydantic` 2.13.x while the autogen stack stays on 2.11.x — the lock now
 carries both `pydantic`/`pydantic-core`/`typing-inspection` lines (harmless).
 
@@ -76,7 +77,7 @@ cffi 2.x).
 4. `streamlit-extras` 0.7.8 only requires `streamlit>=1.37.0` (no upper cap),
    so Tier 2 did not disturb the snowflake stack.
 
-## Tier 2 — web UI surface (DONE, this PR)
+## Tier 2 — web UI surface (DONE, PR #6)
 
 | Package | Was | Adv | Min safe | Applied | Notes |
 |---|---|---|---|---|---|
@@ -88,10 +89,10 @@ peak_assistant/streamlit/app.py` on 1.54.0 serves `/_stcore/health` ok and the
 root page 200. Streamlit minors occasionally change widget behavior — a manual
 chat/OAuth click-through is still recommended before production use.
 
-## Tier 3 — transitive / tooling (pending)
+## Tier 3 — transitive / tooling (DONE, this PR)
 
-Not on the credential path. Old "Min fixed" values (earliest fix) were wrong
-for five rows; corrected targets below.
+Not on the credential path. All upgraded to the Min safe versions below
+(the old "Min fixed" values were wrong for five rows; corrected here).
 
 | Package | Pinned | Adv | Min safe | Latest | Notes |
 |---|---|---|---|---|---|
@@ -127,10 +128,10 @@ contents become sensitive.
    at min-safe, re-audits at zero. `mcp` stayed on 1.x (2.x major deferred).
 2. ~~**Tier 2**~~ — **done** (this PR): `streamlit` 1.54.0 + `tornado` 6.5.8,
    boot smoke green, re-audits at zero.
-3. **Tier 3:** batch `uv lock --upgrade-package <pkg>==<min safe>` to the
-   targets above, `uv sync`, full test suite, re-audit. `pytest` 8→9,
-   `pillow` 11→12, `pyarrow` 21→23, `pymdown-extensions` 10→11 are majors —
-   gate on the suite. (Suggest bundling with the next routine upgrade pass.)
+3. ~~**Tier 3**~~ — **done** (this PR): all 16 packages at min-safe; the
+   `pytest` 8→9, `pillow` 11→12, `pyarrow` 21→23, `pymdown-extensions`
+   10→11 majors all pass the suite. `pytest-asyncio` 1.2.0→1.4.0 is forced
+   collateral of pytest 9.
 4. ~~**`diskcache`**~~ — **accepted risk recorded** (above).
 5. **Cadence:** re-run this audit quarterly and before any release/tag.
 
@@ -145,6 +146,9 @@ contents become sensitive.
 - `uv run mypy .`: 3 errors (pre-existing debt, unchanged)
 - OSV re-audit after both tiers: 17 pkgs / 130 advisories, Tier 1 + Tier 2
   zero (numbers in the Status table)
+- Tier 3 (this PR): `uv run pytest -m "not live"` **215 passed / 1 skipped**
+  (survives the pytest 8→9 major), ruff 88 / mypy 3 unchanged; final OSV
+  re-audit: **1 pkg / 2 advisories — `diskcache` only (no fix exists)**
 
 ## Context
 
