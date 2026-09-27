@@ -27,6 +27,7 @@ zero pushes, PRs, or issues to `Cisco-Talos/PEAK-Assistant`; all work in the
 | 4 | Positive: qwen2.5:7b held the full agent+critic loop (real tool call, coherent report, clean `YYY-TERMINATE-YYY`), and in M4 chose the contract-correct tool (`verify` over `grounded_verify`) | Recorded as evidence for the heterogeneous-verification argument |
 | 5 | parallax `cost.usd` on local models looked like real spend (Opus-tier fallback pricing) | RESOLVED by decision + PR #110: zeroing declined (endpoint, not backend, decides "free"; cost is observability-only); `cost.estimated` added to the log line, live-verified both success and cancel paths |
 | 6 | Small models need steering to use verification tools (unsteered 7B critic never called) | Documented in `m4-live-validation.md`; a prompting concern, not a wiring one |
+| 7 | Small models send capitalized effort values (`"effort":"Medium"`); parallax's derived serde impl rejected them exact-match while the env-var path was already case-insensitive | RESOLVED — parallax PR #111 (`a372871`): manual `Deserialize` delegating to `Effort::parse`, schema unchanged (still lowercase), errors still name variants; live-verified `"Medium"` now returns a verdict |
 
 Carried-over items that predate this arc and remain open: `is_capability_rejection`
 broad-token risk; rustls 0.23.43 version cap unexplained; live smoke inherits the
@@ -83,6 +84,11 @@ gated on that explicit decision.
 1. PEAK CLI `-a`/`-c` file-path quirk (divergence 3).
 2. `inheritEnvironment` / null-key removal implementation (design recorded;
    first-PR scope in `env-merge-design-note.md` section 4).
-3. Carried-over hygiene: `is_capability_rejection` broad-token risk, rustls
+3. Small-model sampling variance: tool usage in M2/M4 runs is not deterministic
+   at 7B scale (final smoke pass: one M2 run skipped tools; one M4 attempt sent
+   `"Medium"` — the rejection itself fixed by parallax PR #111). Final
+   transcripts: `final-m2.log`, `final-m4-steered.log`,
+   `final-m4-steered2.log`, `final-m4-unsteered.log`.
+4. Carried-over hygiene: `is_capability_rejection` broad-token risk, rustls
    cap, live-smoke timeout.
-4. Upstream engagement — explicitly gated on a human decision, per the memo.
+5. Upstream engagement — explicitly gated on a human decision, per the memo.

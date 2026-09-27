@@ -78,11 +78,15 @@ condition. Nothing was persisted into exports; no termination behavior changed.
 
 ## 4. Findings
 
-1. **Steering is required for small models.** The unsteered 7B critic reviewed
-   normally and never reached for the tools; with one context-file instruction it
-   called `verify` immediately. This is model capability, not wiring — but the
-   README/memo should note that opt-in verification benefits from prompting the
-   critic to use it (stronger tool-capable models may not need the nudge).
+1. **RESOLVED 2026-09-27 — steering is required for small models.** The unsteered
+   7B critic reviewed normally and never reached for the tools; with one
+   context-file instruction it called `verify` immediately. This is model
+   capability, not wiring — README/memo should note that opt-in verification
+   benefits from prompting the critic to use it. Follow-on: the final smoke pass
+   also caught the 7B model sending `"effort":"Medium"` (capitalized), which the
+   then-derived serde impl rejected; fixed by parallax PR #111 (tool-argument
+   deserialization now shares `Effort::parse` with the env-var path), verified
+   live — `"Medium"` returns a verdict with `cost.estimated=true`.
 2. **Tool choice matched the tool contracts.** Given a bare hypothesis with no
    artifact locators, the critic picked `verify` (advisory, claim-only) over
    `grounded_verify` (claim-vs-artifact) — exactly the division of labor the memo
