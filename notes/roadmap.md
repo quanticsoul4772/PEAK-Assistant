@@ -1,7 +1,7 @@
 # Roadmap — PEAK × mcp-parallax
 
 Status legend: ✅ done · 🔧 in progress · ⬜ not started.
-All milestones verified against real repo state as of 2026-09-26.
+All milestones verified against real repo state as of 2026-09-27.
 
 ---
 
@@ -19,22 +19,24 @@ All milestones verified against real repo state as of 2026-09-26.
 
 **M0 exit criteria:** all met.
 
-## M1 — Provider-agnostic parallax + offline tests ⬜
+## M1 — Provider-agnostic parallax + offline tests ✅
 
 Per `parallax-byom-design.md`:
 
-- ⬜ `PARALLAX_BACKEND` config + factory in `src/client/mod.rs`.
-- ⬜ `OpenAiCompatClient` adapter with structured-output strategy ladder.
-- ⬜ Error-taxonomy parity tests (Truncation/Refusal/Client mapping) per backend.
-- ⬜ Per-call-site request-shape + happy-path tests for all 12 physical call
+- ✅ `PARALLAX_BACKEND` config + factory in `src/client/mod.rs`.
+- ✅ `OpenAiCompatClient` adapter with structured-output strategy ladder.
+- ✅ Error-taxonomy parity tests (Truncation/Refusal/Client mapping) per backend.
+- ✅ Per-call-site request-shape + happy-path tests for all 12 physical call
   sites (covering 13 LLM-backed operations: 12 routed + memory consolidation
   borrowing Verify's client).
-- ⬜ Token-accounting mapping verified; zero-usage warning policy.
-- ⬜ `cargo test` green fully offline; live smoke opt-in.
-- ⬜ README/config docs updated.
+- ✅ Token-accounting mapping verified; zero-usage warning policy.
+- ✅ `cargo test` green fully offline; live smoke opt-in.
+- ✅ README/config docs updated.
 
 **Exit criteria:** full tool catalog runs against an OpenAI-compatible endpoint
-with only config changes; anthropic backend wire-identical.
+with only config changes; anthropic backend wire-identical. All met — delivered
+as quanticsoul4772/mcp-parallax PR #107 (merged `eadda0c`, 2026-09-27).
+Live-endpoint validation lands with the M2 Ollama run.
 
 ## M2 — Zero-PEAK-code demo ⬜
 
@@ -85,14 +87,14 @@ fallback value story.
 
 Day 1–2
 - [x] Discover repos, verify claims, record provenance (M0)
-- [ ] `uv sync` in the PEAK fork; run `make checks` baseline
-- [ ] Confirm `cargo test` baseline in a scratch copy of parallax (do NOT build
+- [x] `uv sync` in the PEAK fork; run `make checks` baseline
+- [x] Confirm `cargo test` baseline in a scratch copy of parallax (do NOT build
       in the read-only checkout; copy or work in a fork/branch of your own —
       Z3 needs cmake + MSVC Build Tools)
 
 Day 3–4
-- [ ] Start M1: factory + `OpenAiCompatClient` skeleton with mock tests
-- [ ] Write the taxonomy-parity test harness first (it defines "done")
+- [x] Start M1: factory + `OpenAiCompatClient` skeleton with mock tests
+- [x] Write the taxonomy-parity test harness first (it defines "done")
 
 Day 5
 - [ ] M2 demo prep: draft the `mcp_servers.json` snippet with a local
