@@ -124,6 +124,15 @@ The server groups are:
 
 You may add multiple MCP servers to each group if you would like the Assistant to have access to several sources. **All three groups are required and must have at least one server configured.**
 
+### Optional Verification Tools for the Hypothesis Critic
+
+Beyond the three required groups, you may define an optional `hypothesis-verification` group. When that group exists and the CLI is run with `--verification-group hypothesis-verification`, the hypothesis critic gains access to exactly two tools from the first server in the group:
+
+* `grounded_verify`: checks each factual claim in a hypothesis against the artifacts it cites and returns a per-claim verdict
+* `verify`: an advisory ensemble judgment of the claim with cross-pass agreement scoring
+
+The group is entirely opt-in: without the flag (or without the group), hypothesis refinement behaves exactly as before. The verification server runs on its own model configuration (BYOM), so configure a tool-capable model for the critic when enabling it. Any other tools the verification server exposes remain hidden from the critic, and verification verdicts only inform the critic's feedback — they never gate the refinement loop.
+
 ### Environment Variable Interpolation
 
 The MCP server configuration supports environment variable interpolation using `${ENV_VAR}` syntax. This allows you to keep sensitive credentials out of your configuration files:

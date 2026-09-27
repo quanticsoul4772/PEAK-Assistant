@@ -26,7 +26,7 @@ import os
 import sys
 import argparse
 import traceback
-from typing import List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 from dotenv import load_dotenv
 import asyncio
 
@@ -36,6 +36,8 @@ from autogen_agentchat.conditions import TextMentionTermination
 from autogen_agentchat.teams import RoundRobinGroupChat
 from autogen_agentchat.ui import Console
 from autogen_agentchat.base import TaskResult
+from autogen_core import CancellationToken
+from autogen_core.tools import ToolResult, ToolSchema, Workbench
 
 from ..utils import find_dotenv_file
 from ..utils.llm_factory import get_model_client
@@ -44,6 +46,76 @@ from ..utils.agent_callbacks import (
     postprocess_messages_logging,
 )
 from ..utils.result_extractors import extract_refined_hypothesis
+
+# Tools exposed to the hypothesis critic when the optional verification group
+# is configured (design decisions D1/D5 in notes/peak-integration-issue-draft.md).
+VERIFICATION_TOOL_ALLOWLIST = frozenset({"grounded_verify", "verify"})
+
+
+class _AllowlistWorkbench(Workbench):
+    """Wrap a workbench so only allow-listed tools are visible and callable.
+
+    The critic must never see or reach the rest of a verification server's tool
+    catalog (for example parallax's memory tools), so ``list_tools`` filters the
+    inner catalog and ``call_tool`` refuses anything outside the allowlist.
+    """
+
+    def __init__(self, inner: Workbench, allowlist: frozenset = VERIFICATION_TOOL_ALLOWLIST) -> None:
+        self._inner = inner
+        self._allowlist = allowlist
+
+    async def list_tools(self) -> List[ToolSchema]:
+        return [tool for tool in await self._inner.list_tools() if tool.get("name") in self._allowlist]
+
+    async def call_tool(
+        self,
+        name: str,
+        arguments: Mapping[str, Any] | None = None,
+        cancellation_token: CancellationToken | None = None,
+        call_id: str | None = None,
+    ) -> ToolResult:
+        if name not in self._allowlist:
+            raise ValueError(f"Tool {name!r} is not allowed for the hypothesis critic")
+        return await self._inner.call_tool(name, arguments, cancellation_token, call_id)
+
+    async def start(self) -> None:
+        await self._inner.start()
+
+    async def stop(self) -> None:
+        await self._inner.stop()
+
+    async def reset(self) -> None:
+        await self._inner.reset()
+
+    async def save_state(self) -> Mapping[str, Any]:
+        return await self._inner.save_state()
+
+    async def load_state(self, state: Mapping[str, Any]) -> None:
+        await self._inner.load_state(state)
+
+
+async def _resolve_verification_workbench(group: str, verbose: bool = False) -> Optional[Workbench]:
+    """Resolve the optional verification group to an allow-listed workbench.
+
+    Opt-in by design: a missing group, a failed connection, or a missing
+    workbench logs and returns None instead of raising, so verification can
+    never break hypothesis refinement.
+    """
+    from ..utils.mcp_config import get_client_manager, setup_mcp_servers
+
+    connected = await setup_mcp_servers(group)
+    if not connected:
+        if verbose:
+            print(f"Verification group '{group}' has no connected MCP servers; continuing without it.")
+        return None
+    workbench = get_client_manager().get_workbench(connected[0])
+    if workbench is None:
+        if verbose:
+            print(f"No workbench available for verification server '{connected[0]}'; continuing without it.")
+        return None
+    if verbose:
+        print(f"Verification tools enabled for the hypothesis critic via server '{connected[0]}'.")
+    return _AllowlistWorkbench(workbench)
 
 
 async def refiner(
@@ -57,6 +129,7 @@ async def refiner(
     msg_preprocess_kwargs=None,
     msg_postprocess_callback=None,
     msg_postprocess_kwargs=None,
+    mcp_server_group: Optional[str] = None,
 ) -> TaskResult:
     """
     Threat hunting hypothesis refiner agent that combines user input, a markdown document, and its own prompt
@@ -314,9 +387,22 @@ Provide feedback organized by criterion name. Only include criteria that scored 
         "refiner", model_client=hypothesis_refiner_client, system_message=refiner_system_prompt
     )
 
-    # Create the critic agent.
+    # Create the critic agent. When the optional verification MCP group is
+    # configured, the critic gets a workbench exposing exactly the allow-listed
+    # verification tools (grounded_verify, verify); otherwise it is built
+    # exactly as before, with no workbench (default path unchanged).
+    verification_workbench: Optional[Workbench] = None
+    if mcp_server_group:
+        verification_workbench = await _resolve_verification_workbench(mcp_server_group, verbose=verbose)
+    critic_kwargs: Dict[str, Any] = {}
+    if verification_workbench is not None:
+        critic_kwargs["workbench"] = verification_workbench
+        critic_kwargs["reflect_on_tool_use"] = True
     critic_agent = AssistantAgent(
-        "critic", model_client=hypothesis_refiner_critic_client, system_message=critic_system_prompt
+        "critic",
+        model_client=hypothesis_refiner_critic_client,
+        system_message=critic_system_prompt,
+        **critic_kwargs,
     )
 
     # Define a termination condition that stops the task if the critic approves.
@@ -417,6 +503,15 @@ def main() -> None:
         action="store_true",
         help="Enable agent debug logging to msgs.txt and results.txt",
     )
+    parser.add_argument(
+        "--verification-group",
+        help=(
+            "Optional MCP server group whose verification tools (grounded_verify, "
+            "verify) are exposed to the hypothesis critic; omit for default behavior"
+        ),
+        required=False,
+        default=None,
+    )
 
     # Parse the arguments
     args = parser.parse_args()
@@ -502,6 +597,7 @@ def main() -> None:
                     local_data_document=local_data or "",
                     verbose=args.verbose,
                     previous_run=messages,
+                    mcp_server_group=args.verification_group,
                     **debug_agents_opts,
                 )
             )
