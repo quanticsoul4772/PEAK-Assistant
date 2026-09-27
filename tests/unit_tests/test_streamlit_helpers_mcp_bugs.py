@@ -30,7 +30,6 @@ Bug 2: test_mcp_connection() does not include system env vars in subprocess.
 import json
 import os
 import pytest
-import tempfile
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from peak_assistant.utils.mcp_config import MCPServerConfig, TransportType
@@ -39,7 +38,7 @@ from peak_assistant.utils.mcp_config import MCPServerConfig, TransportType
 class TestLoadMcpServerConfigsInterpolation:
     """Bug 1: load_mcp_server_configs() should interpolate ${ENV_VAR} patterns"""
 
-    def test_interpolates_env_vars_in_server_env_dict(self, monkeypatch):
+    def test_interpolates_env_vars_in_server_env_dict(self, monkeypatch, tmp_path):
         """${VAR} in server env dict should be replaced with actual env value"""
         monkeypatch.setenv("TEST_TAVILY_KEY", "resolved_secret_value")
 
@@ -56,23 +55,26 @@ class TestLoadMcpServerConfigsInterpolation:
             }
         }
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            config_path = os.path.join(tmpdir, "mcp_servers.json")
-            with open(config_path, "w") as f:
-                json.dump(config_data, f)
+        # Use tmp_path, not tempfile.TemporaryDirectory(): pytest cleans up
+        # tmp_path after monkeypatch has restored the cwd, while a TemporaryDirectory
+        # context exits while the cwd is still inside it, which fails to delete on
+        # Windows (WinError 32: directory in use by the process itself).
+        config_path = os.path.join(str(tmp_path), "mcp_servers.json")
+        with open(config_path, "w") as f:
+            json.dump(config_data, f)
 
-            monkeypatch.chdir(tmpdir)
-            monkeypatch.setattr(
-                "peak_assistant.streamlit.util.helpers.st.session_state", {}
-            )
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(
+            "peak_assistant.streamlit.util.helpers.st.session_state", {}
+        )
 
-            from peak_assistant.streamlit.util.helpers import load_mcp_server_configs
-            result = load_mcp_server_configs()
+        from peak_assistant.streamlit.util.helpers import load_mcp_server_configs
+        result = load_mcp_server_configs()
 
         assert "tavily" in result
         assert result["tavily"].env["TAVILY_API_KEY"] == "resolved_secret_value"
 
-    def test_interpolates_env_vars_in_auth_token(self, monkeypatch):
+    def test_interpolates_env_vars_in_auth_token(self, monkeypatch, tmp_path):
         """${VAR} in auth token field should be replaced with actual env value"""
         monkeypatch.setenv("TEST_AUTH_TOKEN", "resolved_token_value")
 
@@ -89,23 +91,26 @@ class TestLoadMcpServerConfigsInterpolation:
             }
         }
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            config_path = os.path.join(tmpdir, "mcp_servers.json")
-            with open(config_path, "w") as f:
-                json.dump(config_data, f)
+        # Use tmp_path, not tempfile.TemporaryDirectory(): pytest cleans up
+        # tmp_path after monkeypatch has restored the cwd, while a TemporaryDirectory
+        # context exits while the cwd is still inside it, which fails to delete on
+        # Windows (WinError 32: directory in use by the process itself).
+        config_path = os.path.join(str(tmp_path), "mcp_servers.json")
+        with open(config_path, "w") as f:
+            json.dump(config_data, f)
 
-            monkeypatch.chdir(tmpdir)
-            monkeypatch.setattr(
-                "peak_assistant.streamlit.util.helpers.st.session_state", {}
-            )
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(
+            "peak_assistant.streamlit.util.helpers.st.session_state", {}
+        )
 
-            from peak_assistant.streamlit.util.helpers import load_mcp_server_configs
-            result = load_mcp_server_configs()
+        from peak_assistant.streamlit.util.helpers import load_mcp_server_configs
+        result = load_mcp_server_configs()
 
         assert "http-server" in result
         assert result["http-server"].auth.token == "resolved_token_value"
 
-    def test_missing_env_var_without_default_returns_empty(self, monkeypatch):
+    def test_missing_env_var_without_default_returns_empty(self, monkeypatch, tmp_path):
         """Missing env var without default should cause graceful failure (empty dict)"""
         config_data = {
             "mcpServers": {
@@ -120,18 +125,21 @@ class TestLoadMcpServerConfigsInterpolation:
             }
         }
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            config_path = os.path.join(tmpdir, "mcp_servers.json")
-            with open(config_path, "w") as f:
-                json.dump(config_data, f)
+        # Use tmp_path, not tempfile.TemporaryDirectory(): pytest cleans up
+        # tmp_path after monkeypatch has restored the cwd, while a TemporaryDirectory
+        # context exits while the cwd is still inside it, which fails to delete on
+        # Windows (WinError 32: directory in use by the process itself).
+        config_path = os.path.join(str(tmp_path), "mcp_servers.json")
+        with open(config_path, "w") as f:
+            json.dump(config_data, f)
 
-            monkeypatch.chdir(tmpdir)
-            monkeypatch.setattr(
-                "peak_assistant.streamlit.util.helpers.st.session_state", {}
-            )
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(
+            "peak_assistant.streamlit.util.helpers.st.session_state", {}
+        )
 
-            from peak_assistant.streamlit.util.helpers import load_mcp_server_configs
-            result = load_mcp_server_configs()
+        from peak_assistant.streamlit.util.helpers import load_mcp_server_configs
+        result = load_mcp_server_configs()
 
         # After fix: ConfigInterpolationError is caught by the broad except,
         # returning {}. Before fix: the literal string passes through.
