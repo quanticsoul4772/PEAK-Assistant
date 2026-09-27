@@ -91,10 +91,16 @@ condition. Nothing was persisted into exports; no termination behavior changed.
    an overclaiming hypothesis (`refuted`, 0.67) and the critic's feedback echoed
    the ensemble finding while termination stayed untouched — consensus structure
    informing judgment, never certifying truth (memo caveat intact).
-4. **Keyless and local throughout.** All three ensemble passes ran on
-   `qwen2.5:7b` via `http://localhost:11434/v1` with no API key. The telemetry
-   `cost.usd=0.0093` is parallax's notional price-table accounting, not spend;
-   zeroing it for localhost backends is a candidate parallax follow-up.
+4. **RESOLVED 2026-09-27** — Keyless and local throughout: all three ensemble
+   passes ran on `qwen2.5:7b` via `http://localhost:11434/v1` with no API key. The
+   telemetry `cost.usd=0.0093` was parallax's notional price-table accounting, not
+   spend. Investigated and decided against zeroing for localhost (cost is
+   observability-only, and the endpoint — not the backend — decides "free");
+   the honest fix landed instead as parallax PR #110: the invocation log line
+   now carries `cost.estimated` (`true` = Opus-tier fallback over-estimate for
+   an unknown model id, `false` = catalog price), verified live on Ollama:
+   `cost.usd=0.00684 cost.estimated=true`. See
+   `notes/parallax-telemetry-fixes.md` for the full decision record.
 5. **Default path untouched, per test T1.** The negative control is the merged
    test suite: T1 pins that `refiner()` with no `mcp_server_group` never attempts
    MCP and constructs the critic without a workbench.
