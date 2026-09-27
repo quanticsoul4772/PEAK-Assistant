@@ -82,6 +82,9 @@ local state; local branches may be behind their remotes.
 12. `env-merge-design-note.md` — PEAK-side design proposal (2026-09-27):
     explicit env-key removal via `null` in `mcp_servers.json` vs empty-string
     overrides; options analyzed, Option B recommended, first-PR scope.
+13. `project-wrapup.md` — project wrap-up (2026-09-27): M0–M4 outcomes,
+    divergence ledger with dispositions, and the checklist a future upstream
+    engagement would need. Roadmap complete; fork-only policy held throughout.
 
 ## Branch strategy (this repo)
 
