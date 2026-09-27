@@ -22,6 +22,8 @@
 
 import streamlit as st
 
+from typing import Any
+
 from autogen_agentchat.messages import TextMessage
 
 from peak_assistant.utils.agent_callbacks import (
@@ -48,7 +50,7 @@ from .hypothesis_helpers import get_current_hypothesis
 
 async def run_researcher(debug_agents: bool = False):
 
-    debug_agents_opts = dict()
+    debug_agents_opts: dict[str, Any] = dict()
     if debug_agents:
         debug_agents_opts = {
             "msg_preprocess_callback": preprocess_messages_logging,
@@ -89,7 +91,7 @@ async def run_researcher(debug_agents: bool = False):
 
 async def run_local_data(debug_agents: bool = False):
 
-    debug_agents_opts = dict()
+    debug_agents_opts: dict[str, Any] = dict()
     if debug_agents:
         debug_agents_opts = {
             "msg_preprocess_callback": preprocess_messages_logging,
@@ -144,7 +146,7 @@ async def run_hypothesis_generator():
 
 async def run_hypothesis_refiner(debug_agents: bool = False):
 
-    debug_agents_opts = dict()
+    debug_agents_opts: dict[str, Any] = dict()
     if debug_agents:
         debug_agents_opts = {
             "msg_preprocess_callback": preprocess_messages_logging,
@@ -221,7 +223,7 @@ async def run_able_table(debug_agents: bool = False):
 
 async def run_data_discovery(debug_agents: bool = False):
 
-    debug_agents_opts = dict()
+    debug_agents_opts: dict[str, Any] = dict()
     if debug_agents:
         debug_agents_opts = {
             "msg_preprocess_callback": preprocess_messages_logging,
@@ -259,7 +261,7 @@ async def run_data_discovery(debug_agents: bool = False):
 
 async def run_hunt_plan(debug_agents: bool = False):
 
-    debug_agents_opts = dict()
+    debug_agents_opts: dict[str, Any] = dict()
     if debug_agents:
         debug_agents_opts = {
             "msg_preprocess_callback": preprocess_messages_logging,

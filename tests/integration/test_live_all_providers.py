@@ -88,7 +88,7 @@ def discover_provider_model_combinations(config_path: Path):
         print(f"Warning: Could not resolve defaults: {e}")
     
     # Get all agents
-    config = loader._config
+    config = loader._config or {}
     if "agents" in config:
         for agent_name, agent_config in config["agents"].items():
             try:

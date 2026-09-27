@@ -215,7 +215,7 @@ def switch_tabs(tab_index: int = 0):
 # Data classes now imported from peak_assistant.utils.mcp_config
 # This eliminates code duplication and ensures consistency across the codebase
 
-def load_mcp_server_configs() -> Dict[str, MCPServerConfig]:
+def load_mcp_server_configs() -> Dict[str, Any]:
     """Load MCP server configurations from mcp_servers.json file"""
     if "mcp_server_configs" in st.session_state:
         cached_configs = st.session_state["mcp_server_configs"]
@@ -266,7 +266,9 @@ def load_mcp_server_configs() -> Dict[str, MCPServerConfig]:
         st.session_state["mcp_server_groups"] = server_groups
         logger.info(f"Loaded {len(server_groups)} server groups")
         
-        servers = {}
+        # Values are MCPServerConfig; on construction failure an error-marker
+        # string is stored as fallback for debugging (consumers use hasattr).
+        servers: Dict[str, Any] = {}
         servers_to_load = []
         
         # Handle "mcpServers" object format (existing format)
@@ -406,7 +408,7 @@ def get_user_session_id() -> str:
         st.session_state["user_session_id"] = f"streamlit_user_{secrets.token_hex(16)}"
     return st.session_state["user_session_id"]
 
-def store_session_for_oauth(server_name: str, state: str) -> str:
+def store_session_for_oauth(server_name: str, state: str) -> str | None:
     """
     Store current session state in a temporary file for OAuth redirect recovery.
     Uses the OAuth state parameter as the key for recovery.
@@ -426,7 +428,9 @@ def store_session_for_oauth(server_name: str, state: str) -> str:
         )
 
         for key, value in st.session_state.items():
-            if key not in allowed_exact_keys and not key.startswith(allowed_prefixes):
+            if not isinstance(key, str) or (
+                key not in allowed_exact_keys and not key.startswith(allowed_prefixes)
+            ):
                 continue
 
             try:
@@ -769,7 +773,11 @@ async def test_mcp_connection(server_name: str, server_config: MCPServerConfig) 
                     headers["Authorization"] = f"Bearer {auth_data['access_token']}"
                 elif auth_data.get("api_key"):
                     # Use the configured header name or default to Authorization
-                    header_name = server_config.auth.header_name if server_config.auth else "Authorization"
+                    header_name = (
+                        (server_config.auth.header_name or "Authorization")
+                        if server_config.auth
+                        else "Authorization"
+                    )
                     headers[header_name] = auth_data["api_key"]
             
             # Test basic connectivity
@@ -1115,7 +1123,7 @@ def get_agent_config_data() -> List[Dict[str, str]]:
                 deployment = agent_config.get("deployment", "")
                 
                 # Determine source
-                config = loader._config
+                config = loader._config or {}
                 if "agents" in config and agent_name in config["agents"]:
                     source = "agent"
                 elif "groups" in config:

@@ -165,7 +165,7 @@ class ReportEvaluator:
             provider = self.model_client.get_provider_type(judge_role)
             model_info[metric_name] = f"{provider}:{model_name}"
 
-        self.full_evaluation_data = {
+        self.full_evaluation_data: dict[str, Any] = {
             "metadata": {
                 "evaluation_date": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "total_reports": 0,
@@ -497,7 +497,11 @@ Return the extracted section content:"""
         self, report: str, topic: str = ""
     ) -> MetricResult:
         """Check if all required sections exist with proper formatting"""
-        details = {"missing_sections": [], "empty_sections": [], "sections_found": []}
+        details: dict[str, list[str]] = {
+            "missing_sections": [],
+            "empty_sections": [],
+            "sections_found": [],
+        }
 
         for section in REQUIRED_SECTIONS:
             # Look for section header (## Section or # Section)
@@ -963,7 +967,7 @@ Respond with ONLY a JSON object in this exact format:
         }
 
         # Score based on quantity and diversity
-        score = min(100, len(urls) * 5 + len(unique_domains) * 10)
+        score: float = min(100, len(urls) * 5 + len(unique_domains) * 10)
         if details["has_mitre"]:
             score = min(100, score + 10)
 
@@ -1023,7 +1027,7 @@ Respond with ONLY a JSON object in this exact format:
         safe_urls = [url for url in urls if is_safe_public_url(url)]
         blocked_urls = [url for url in urls if not is_safe_public_url(url)]
 
-        results = {
+        results: dict[str, Any] = {
             "total_urls": len(urls),
             "blocked_urls": len(blocked_urls),
             "valid_urls": 0,
@@ -1652,11 +1656,17 @@ Respond with ONLY a JSON object in this exact format:
             reports_by_topic[report["topic"]].append(report)
 
         # Track overall statistics
-        backend_wins = defaultdict(int)
+        backend_wins: defaultdict[str, int] = defaultdict(int)
         backend_scores = defaultdict(list)
-        backend_topic_scores = defaultdict(dict)  # backend -> {topic: score}
-        backend_rankings = defaultdict(lambda: {"first": 0, "second": 0, "third": 0})
-        metric_scores_by_backend = defaultdict(lambda: defaultdict(list))
+        backend_topic_scores: defaultdict[str, dict[str, float]] = defaultdict(
+            dict
+        )  # backend -> {topic: score}
+        backend_rankings: defaultdict[str, dict[str, int]] = defaultdict(
+            lambda: {"first": 0, "second": 0, "third": 0}
+        )
+        metric_scores_by_backend: defaultdict[
+            str, defaultdict[str, list[float]]
+        ] = defaultdict(lambda: defaultdict(list))
 
         # Setup progress bar
         total_metrics = len(all_reports) * len(self.metric_functions)
@@ -1805,8 +1815,8 @@ Respond with ONLY a JSON object in this exact format:
 
         for metric_name in self.metric_functions.keys():
             # Find best score for this metric
-            best_score = -1
-            best_backend = None
+            best_score = -1.0
+            best_backend = ""
             scores_by_backend = {}
 
             for metrics in metrics_list:
@@ -1829,7 +1839,7 @@ Respond with ONLY a JSON object in this exact format:
             metric_leaders[metric_name] = best_backend
 
         # Key Insights
-        backend_metric_wins = defaultdict(int)
+        backend_metric_wins: defaultdict[str, int] = defaultdict(int)
         for leader in metric_leaders.values():
             backend_metric_wins[leader] += 1
 
@@ -1842,7 +1852,7 @@ Respond with ONLY a JSON object in this exact format:
             )
 
         # Find biggest gaps
-        biggest_gap = 0
+        biggest_gap = 0.0
         biggest_gap_metric = None
         for metric_name in self.metric_functions.keys():
             scores = [m.metric_results[metric_name].score for m in metrics_list]

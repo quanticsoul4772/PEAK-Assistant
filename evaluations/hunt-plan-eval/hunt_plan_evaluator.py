@@ -272,7 +272,12 @@ Return the extracted section content:
 
     # --------------- Metrics ---------------
     def evaluate_template_conformance(self, report: str) -> MetricResult:
-        details = {"sections_found": [], "missing_sections": [], "tables_ok": {}, "formatting_ok": True}
+        details: dict[str, Any] = {
+            "sections_found": [],
+            "missing_sections": [],
+            "tables_ok": {},
+            "formatting_ok": True,
+        }
         for sec in REQUIRED_SECTIONS:
             pattern = rf"^##?\s+{re.escape(sec)}\s*$"
             if re.search(pattern, report, re.MULTILINE | re.IGNORECASE):
@@ -836,7 +841,14 @@ Respond with ONLY JSON:
             for other in metrics_list:
                 if other.filename == winner:
                     continue
-                diff_entry = {"score_diff": round(other.total_score - winner_metrics.total_score, 2), "better_metrics": [], "worse_metrics": [], "roughly_equal": []}
+                diff_entry: dict[str, Any] = {
+                    "score_diff": round(
+                        other.total_score - winner_metrics.total_score, 2
+                    ),
+                    "better_metrics": [],
+                    "worse_metrics": [],
+                    "roughly_equal": [],
+                }
                 for metric_name in self.metric_functions.keys():
                     w_score = winner_metrics.metric_results[metric_name].score
                     o_score = other.metric_results[metric_name].score
@@ -864,8 +876,10 @@ Respond with ONLY JSON:
             comparison_md_lines.append("### Rankings")
             comparison_md_lines.append("| File | Total Score |")
             comparison_md_lines.append("| :-- | --: |")
-            for f, s in rankings:
-                comparison_md_lines.append(f"| {f.replace('|','\\|')} | {s:.1f} |")
+            for fname, s in rankings:
+                comparison_md_lines.append(
+                    f"| {fname.replace('|','\\|')} | {s:.1f} |"
+                )
             if comparison_json.get("key_differences"):
                 comparison_md_lines.append("")
                 comparison_md_lines.append("### Key differences")

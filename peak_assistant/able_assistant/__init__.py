@@ -32,7 +32,9 @@ async def able_table(
     research_document: str,
     local_data_document: str,
     local_context: str,
-    previous_run: Optional[list[SystemMessage | UserMessage]] = None,
+    # Duck-typed message list, matching researcher/refiner: callers pass
+    # agentchat TextMessages, which the model client maps permissively.
+    previous_run: Optional[list] = None,
 ) -> str:
     """
     Generate a PEAK ABLE table based on the given hypothesis and research document.

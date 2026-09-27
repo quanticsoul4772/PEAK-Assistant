@@ -139,6 +139,7 @@ class ModelConfigLoader:
         """
         if self._config is None:
             self.load()
+        assert self._config is not None  # load() populates it
         
         agent_config = None
         
@@ -196,6 +197,7 @@ class ModelConfigLoader:
         """
         if self._providers is None:
             self.load()
+        assert self._providers is not None  # load() populates it
         
         if provider_name not in self._providers:
             raise ModelConfigError(

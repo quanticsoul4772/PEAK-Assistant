@@ -26,7 +26,7 @@ import os
 import argparse
 import asyncio
 import re
-from typing import List
+from typing import Any, List
 from dotenv import load_dotenv
 
 from autogen_agentchat.messages import TextMessage
@@ -134,7 +134,7 @@ def main() -> None:
 
     messages: List[TextMessage] = list()
 
-    debug_agents_opts = dict() 
+    debug_agents_opts: dict[str, Any] = dict()
 
     # If debug agents is enabled, add the debug options
     if args.debug_agents:
