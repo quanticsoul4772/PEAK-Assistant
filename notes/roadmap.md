@@ -48,20 +48,24 @@ with only config changes; anthropic backend wire-identical.
 **Exit criteria:** reproducible demo on a clean PEAK checkout with only
 `mcp_servers.json` + env added.
 
-## M3 — Open the PEAK issue ⬜
+## M3 — Finalize the integration proposal (fork-only) ⬜
 
-- ⬜ File `peak-integration-issue-draft.md` (finalized with demo links/results)
-  at Cisco-Talos/PEAK-Assistant.
-- ⬜ Include the heterogeneous-verification argument and the "consensus ≠ truth"
-  caveat; answer maintainer questions with concrete options.
-- ⬜ Track responses; adjust M4 scope to maintainer preference (config-only →
-  code PR question is the decisive one).
+**Policy: all work stays in our fork. No issues or PRs on
+`Cisco-Talos/PEAK-Assistant`.**
 
-**Exit criteria:** issue filed, maintainer direction on Q1/Q2 known.
+- ⬜ Finalize `peak-integration-issue-draft.md` as an internal design memo
+  (attach demo links/results from M2). Keep it in issue shape so it could be
+  filed upstream *only if* we ever explicitly decide to engage.
+- ⬜ Resolve the maintainer questions as internal design decisions (config vs
+  code, opt-in call policy, output treatment).
+- ⬜ Optionally watch upstream's issues/PRs read-only for context; never post.
 
-## M4 — First small PEAK PR (optional, gated on M3) ⬜
+**Exit criteria:** memo finalized and decisions recorded in the fork.
 
-Strictly minimal, opt-in only:
+## M4 — First small integration PR in our fork (optional, gated on M3) ⬜
+
+A PR against **our fork's `main` only** — never upstream. Strictly minimal,
+opt-in only:
 
 - ⬜ One agent (hypothesis critic) can receive tools from one configured group
   (`hypothesis-verification`).
@@ -70,10 +74,10 @@ Strictly minimal, opt-in only:
 - ⬜ Mocked tests only; no live calls in CI.
 - ⬜ **No default behavior change** — identical prompts/outputs when the group
   is absent.
-- ⬜ PR description states guarantees from the issue's compatibility table.
+- ⬜ PR description states guarantees from the memo's compatibility table.
 
-**Exit criteria:** PR merged or explicitly declined; either way the demo (M2)
-remains the fallback value story.
+**Exit criteria:** PR merged into our fork's `main`; demo (M2) remains the
+fallback value story.
 
 ---
 
@@ -97,8 +101,12 @@ Day 5
       Anthropic-backend behavior (feeds M1 bug list)
 
 Ongoing hygiene
+- [ ] **Never touch `Cisco-Talos/PEAK-Assistant`** — no pushes, PRs, or issues.
+      All PEAK-side work lives in our fork (`quanticsoul4772/PEAK-Assistant`).
+      Reading/fetching upstream for updates is fine.
 - [ ] Never commit `.env`, certs, `model_config.json`/`mcp_servers.json` edits
 - [ ] Keep both MCP checkouts read-only (they are the user's working trees;
       parallax's is currently dirty on `053-diverge-pass-count` — leave it so)
-- [ ] PEAK work happens only on `notes/research` or `feat/*` cut from fresh
-      `upstream/main`; never commit to `main`
+- [ ] PEAK work happens only on `notes/research` or `feat/*` cut from our
+      fork's `main` (optionally synced from `upstream/main`); never commit
+      directly to `main`

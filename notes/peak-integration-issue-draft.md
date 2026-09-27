@@ -1,8 +1,11 @@
 # Draft PEAK Issue — Opt-In Heterogeneous Verification for the Hypothesis Phase
 
-> **This is a draft for filing at `Cisco-Talos/PEAK-Assistant` (with a demo).**
-> Not yet filed. Maintainer questions at the bottom must be answered (or
-> explicitly offered as options) before/during filing.
+> **Status: internal design memo — NOT to be filed at
+> `Cisco-Talos/PEAK-Assistant`.** Policy: all work stays in our fork
+> (`quanticsoul4772/PEAK-Assistant`); no issues or PRs on the upstream project.
+> This memo is kept in issue shape so it could be filed later *only* on an
+> explicit decision to engage upstream. Until then, the "maintainer questions"
+> below are ours to resolve as internal design decisions (see roadmap M3).
 
 ---
 

@@ -61,9 +61,18 @@ local state; local branches may be behind their remotes.
 
 ## Branch strategy (this repo)
 
-- `main` — tracks `upstream/main`; never commit work here.
+- `main` — mirrors `upstream/main`; never commit work here.
 - `notes/research` — this branch; long-lived home for these docs.
-- `feat/<name>` — short-lived PR branches cut from fresh `upstream/main`.
+- `feat/<name>` — short-lived PR branches cut from fresh `main`.
+
+## Upstream policy
+
+**All work stays in our fork (`quanticsoul4772/PEAK-Assistant`). Nothing is
+posted to `Cisco-Talos/PEAK-Assistant`** — no PRs, no issues, no pushes.
+Reading/fetching upstream for updates is fine. `peak-integration-issue-draft.md`
+is therefore an internal design memo, not a pending filing (roadmap M3).
+(Historical note: upstream PR #95 was opened by mistake and closed the same
+day; GitHub retains closed PRs, so it remains visible in upstream's history.)
 
 Do not commit `.env`, `model_config.json`/`mcp_servers.json` edits, TLS certs, or
 anything from the MCP server checkouts into this fork.
