@@ -171,7 +171,8 @@ lateral movement inside the victim network." -r <research.md> -a <able.md> -c <c
    not inline text, despite help text implying inline values. Fixed by aligning the
    help text across all four CLIs (`data_assistant`, `planning_assistant`,
    `able_assistant`, `hypothesis_refiner`) — "Path to the ... file" — pinned by
-   `tests/unit_tests/test_cli_help_path_parity.py` (8 tests). Inline-value support
+   `tests/unit_tests/test_cli_help_path_parity.py` (8 tests), fork PR #21
+   (merged `b062dc1`). Inline-value support
    was considered and rejected: a typo'd path silently becoming literal content is
    worse than a loud "file not found".
 4. **Positive:** qwen2.5:7b (7B, local) held the full agent+critic loop — one real
