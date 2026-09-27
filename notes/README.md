@@ -55,8 +55,9 @@ local state; local branches may be behind their remotes.
    corrections to the carried-over brief.
 2. `parallax-byom-design.md` — design for making mcp-parallax provider-agnostic
    (BYOM), with migration and test plans.
-3. `peak-integration-issue-draft.md` — draft PEAK GitHub issue: opt-in
-   heterogeneous verification layer.
+3. `peak-integration-issue-draft.md` — **finalized** internal design memo
+   (M3, 2026-09-27): opt-in heterogeneous verification layer; design
+   questions resolved as recorded decisions D1–D5; M2 evidence attached.
 4. `roadmap.md` — M0–M4 milestones and first-week checklist.
 5. `m2-demo-evidence.md` — M2 zero-PEAK-code demo evidence: verbatim config
    snippets, transcript excerpts, divergence list, exit-criteria mapping

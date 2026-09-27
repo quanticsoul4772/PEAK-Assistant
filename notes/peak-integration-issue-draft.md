@@ -1,11 +1,11 @@
-# Draft PEAK Issue — Opt-In Heterogeneous Verification for the Hypothesis Phase
+**Memo:** Opt-In Heterogeneous Verification for the Hypothesis Phase — FINALIZED (M3)
 
-> **Status: internal design memo — NOT to be filed at
+> **Status: FINALIZED internal design memo — NOT to be filed at
 > `Cisco-Talos/PEAK-Assistant`.** Policy: all work stays in our fork
 > (`quanticsoul4772/PEAK-Assistant`); no issues or PRs on the upstream project.
 > This memo is kept in issue shape so it could be filed later *only* on an
-> explicit decision to engage upstream. Until then, the "maintainer questions"
-> below are ours to resolve as internal design decisions (see roadmap M3).
+> explicit decision to engage upstream. The memo's design questions were
+> resolved as internal design decisions D1-D5 on 2026-09-27 (see roadmap M3).
 
 ---
 
@@ -37,10 +37,11 @@ hypothesis-refinement loop:
 
 - **`grounded_verify`** — claim-vs-artifact: each factual claim in a hypothesis,
   with locators to the research/ABLE artifacts it cites, is checked against
-  those artifacts and returns a per-claim verdict.
+  those artifacts and returns a per-claim verdict. **Status: to be wired in M4**
+  (D1/D2).
 - **`verify`** — advisory ensemble passes: independent judgment of the claim
   with cross-pass agreement scoring. Advisory only: it informs the critic's
-  feedback, it never vetoes.
+  feedback, it never vetoes. **Status: to be wired in M4** (D2/D4).
 - Mapping: a new MCP server group (e.g. `hypothesis-verification`) whose tools
   are available to the **hypothesis critic** agent.
 
@@ -72,7 +73,7 @@ cross-pass — extended across the *system* boundary. A critic review that
 survives both a same-model critic and a different-model verifier is
 substantially more trustworthy than either alone.
 
-**Caveat (we will say this in the docs too): consensus ≠ truth.** Two models
+**Caveat (stated in the docs too): consensus ≠ truth.** Two models
 agreeing can still be jointly wrong — especially about niche security tooling,
 where both may share training-data biases. The layer reports agreement
 *structure* (which claims were independently supported/refuted, with what
@@ -93,36 +94,40 @@ human.
 
 ## Scope of the first contribution
 
-1. **Zero-code demo (exists now):** parallax registered in an *existing*
+1. **Zero-code demo (delivered):** parallax registered in an *existing*
    `mcp_servers.json` group works today — tools land in that phase's workbench.
-   We will attach a demo recording/output.
+   **Delivered 2026-09-27: evidence attached as `notes/m2-demo-evidence.md`**
+   (+ verbatim `notes/m2-demo-transcript.log`), merged via fork PR #11.
 2. **First PR (opt-in, minimal):** allow the hypothesis critic to receive tools
    from a configured `hypothesis-verification` group. One agent, two tools
    (`grounded_verify`, `verify`), mocked tests, **no default behavior change**.
+   **This is M4, gated on this memo (M3) — see D1.**
 3. Later (only if wanted upstream): ABLE-table `check` for quantitative claims,
    `checkpoint_*` turn review.
 
-## Maintainer questions
+## Design questions and recorded decisions
 
-1. **Config vs code PR.** Today the group→agent mapping is a parameter default
-   in code (`mcp_server_group_external: str = "research-external"` etc.), and
-   the hypothesis agents have no MCP workbench at all. Should the first
-   contribution:
-   - (a) extend the mapping in code for one named group (small PR), or
-   - (b) generalize group→agent mapping into `model_config.json`/another config
-     key (bigger design, more flexible), or
-   - (c) stay demo-only and not change PEAK code at all?
-   Our reading is that (a) is smallest and (b) is where this naturally ends up.
-2. **Are opt-in extra model calls acceptable in the hypothesis phase** at all
-   (cost/latency), assuming they are off by default and never mandatory?
-3. **Output treatment:** should verification verdicts be surfaced as critic
-   guidance only (our proposal), or persisted into the exported research
-   documents?
-4. **Termination semantics:** should `grounded_verify` verdicts ever influence
-   the critic loop's termination condition (e.g. unrefuted claims required to
-   proceed), or remain advisory forever? We propose advisory-only for v1.
-5. Any preferences on naming/UX for the opt-in (sidebar toggle? config presence
-   alone? per-phase setting)?
+All questions are now recorded design decisions (2026-09-27). Every decision
+preserves the compatibility table at the bottom unchanged.
+1. **D1 — Config vs code: option (a), one named group in code.** The first
+   contribution (M4) extends the group→agent mapping for exactly one group
+   (`hypothesis-verification`), exposed to one agent (the hypothesis critic).
+   Generalizing the mapping into config (option b) is deferred until a second
+   consumer exists; option (c) demo-only is already covered by M2.
+2. **D2 — Opt-in extra model calls: acceptable.** They cost nothing unless the
+   user configures the group, are never mandatory, and run on the verifier's
+   own model configuration (BYOM). The M2 demo shows the mechanism works with
+   a free local backend.
+3. **D3 — Output treatment: critic guidance only.** Verification verdicts
+   inform the critic's feedback; nothing is persisted into exported research
+   documents in v1. Revisit after M4 field experience.
+4. **D4 — Termination semantics: advisory forever (v1).** `grounded_verify`
+   verdicts never influence the critic loop's termination condition; the loop
+   keeps its existing termination rules. Unification is revisited only with a
+   per-claim audit trail in place.
+5. **D5 — Naming/UX: config presence is the opt-in.** No toggle, no per-phase
+   setting: the group exists in `mcp_servers.json` or it does not. Documented
+   in the README and the compatibility table.
 
 ## Compatibility summary
 
