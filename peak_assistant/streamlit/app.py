@@ -23,6 +23,7 @@
 import os
 import time
 import logging
+from typing import Literal
 from dotenv import load_dotenv
 
 import streamlit as st 
@@ -87,7 +88,11 @@ if "code" in query_params and "state" in query_params:
     else:
         # Fallback: scan for OAuth state
         for key in st.session_state.keys():
-            if key.startswith("oauth_state_") and st.session_state[key] == state:
+            if (
+                isinstance(key, str)
+                and key.startswith("oauth_state_")
+                and st.session_state[key] == state
+            ):
                 server_name = key.replace("oauth_state_", "")
                 break
     
@@ -153,7 +158,7 @@ if "code" in query_params and "state" in query_params:
         logger.error("OAuth callback failed: Could not identify server from state parameter")
         logger.debug(f"Session restored: {session_restored}")
         logger.debug(f"Received state: {state}")
-        logger.debug(f"Available OAuth states: {[k for k in st.session_state.keys() if k.startswith('oauth_state_')]}")
+        logger.debug(f"Available OAuth states: {[k for k in st.session_state.keys() if isinstance(k, str) and k.startswith('oauth_state_')]}")
 
 # Initialize local context for this user session.
 #
@@ -448,7 +453,7 @@ with mcp_servers_tab:
             # Clear any potentially conflicting keys from session state
             keys_to_remove = []
             for key in st.session_state.keys():
-                if (
+                if isinstance(key, str) and (
                     key.startswith(f"auth_button_{server_name}")
                     or key.startswith(f"btn_{server_name}")
                 ):
@@ -476,7 +481,7 @@ with mcp_servers_tab:
 
                 # Create status button with appropriate color
                 if status_color == "green":
-                    button_type = "primary"
+                    button_type: Literal["primary", "secondary", "tertiary"] = "primary"
                     button_disabled = True
                     button_label = "✅ Connected"
                 elif status_color == "yellow":
@@ -652,7 +657,7 @@ with mcp_servers_tab:
                 # Clear any potentially conflicting keys from session state
                 keys_to_remove = []
                 for key in st.session_state.keys():
-                    if (
+                    if isinstance(key, str) and (
                         key.startswith(f"auth_button_{server_name}")
                         or key.startswith(f"btn_{server_name}")
                     ):
@@ -795,7 +800,11 @@ with mcp_servers_tab:
                 del st.session_state["mcp_server_configs"]
             
             # Clear OAuth2 discovery cache
-            discovery_keys = [key for key in st.session_state.keys() if key.startswith("oauth_discovery_")]
+            discovery_keys = [
+                key
+                for key in st.session_state.keys()
+                if isinstance(key, str) and key.startswith("oauth_discovery_")
+            ]
             for key in discovery_keys:
                 del st.session_state[key]
             
@@ -807,7 +816,11 @@ with mcp_servers_tab:
             st.write(f"**Session ID:** `{user_session_id}`")
             
             # Show stored authentication data
-            auth_keys = [key for key in st.session_state.keys() if key.startswith("MCP.")]
+            auth_keys = [
+                key
+                for key in st.session_state.keys()
+                if isinstance(key, str) and key.startswith("MCP.")
+            ]
             if auth_keys:
                 st.write("**Stored Authentication:**")
                 for auth_key in auth_keys:
@@ -819,7 +832,11 @@ with mcp_servers_tab:
                 st.write("No authentication data stored in session.")
             
             # Show OAuth2 discovery results
-            discovery_keys = [key for key in st.session_state.keys() if key.startswith("oauth_discovery_")]
+            discovery_keys = [
+                key
+                for key in st.session_state.keys()
+                if isinstance(key, str) and key.startswith("oauth_discovery_")
+            ]
             if discovery_keys:
                 st.write("**OAuth2 Discovery Results:**")
                 for discovery_key in discovery_keys:

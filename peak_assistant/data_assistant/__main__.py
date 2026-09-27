@@ -24,7 +24,7 @@
 
 import os
 import argparse
-from typing import List
+from typing import Any, List
 from dotenv import load_dotenv
 import asyncio
 
@@ -161,7 +161,7 @@ def main() -> None:
             exit(1)
 
     messages: List[TextMessage] = list()
-    debug_agents_opts = dict()
+    debug_agents_opts: dict[str, Any] = dict()
 
     if args.debug_agents:
         debug_agents_opts = {

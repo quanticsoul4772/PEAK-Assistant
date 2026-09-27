@@ -29,7 +29,7 @@ from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.conditions import TextMentionTermination
 from autogen_agentchat.teams import RoundRobinGroupChat, SelectorGroupChat
 from autogen_agentchat.ui import Console
-from autogen_agentchat.base import TaskResult
+from autogen_agentchat.base import ChatAgent, TaskResult, Team
 
 from ..utils.llm_factory import get_model_client
 from ..utils.mcp_config import get_client_manager, setup_mcp_servers
@@ -317,7 +317,7 @@ async def researcher(
     summary_critic_client = await get_model_client(agent_name="summary_critic")
     research_team_lead_client = await get_model_client(agent_name="research_team_lead")
 
-    participants = [
+    participants: list[ChatAgent | Team] = [
         AssistantAgent(
             "external_search_agent",
             description="Performs searches and analyzes information using external research tools (i.e. web search)",

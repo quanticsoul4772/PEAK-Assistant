@@ -68,13 +68,15 @@ def postprocess_messages_logging(
     last_message_timestamp = None
     with open(logfile, 'a') as f:
         for msg in result.messages:
+            # Not every event type carries content (e.g. tool-call events).
+            content = getattr(msg, "content", "")
             log_msg = f"""
 -----------BEGIN TaskResult----------------------------
 Agent ID: {agent_id}
 Timestamp: {msg.created_at}
 Source:{msg.source}
-Content length:{len(msg.content)}
-Content preview:{_content_preview(msg.content)}
+Content length:{len(content)}
+Content preview:{_content_preview(content)}
 Model usage:{msg.models_usage}
 -----------END TaskResult------------------------------
 """
@@ -89,12 +91,17 @@ Model usage:{msg.models_usage}
 
             last_message_timestamp = msg.created_at
 
+        duration = (
+            last_message_timestamp - first_message_timestamp
+            if first_message_timestamp and last_message_timestamp
+            else None
+        )
         summary_msg = f"""
 -----------BEGIN TaskResult Summary--------------------
 Agent ID: {agent_id}
 First message timestamp: {first_message_timestamp}
 Last message timestamp: {last_message_timestamp}
-Duration: {last_message_timestamp - first_message_timestamp}
+Duration: {duration}
 Stop reason: {result.stop_reason}
 Prompt tokens: {prompt_tokens}
 Completion tokens: {completion_tokens}

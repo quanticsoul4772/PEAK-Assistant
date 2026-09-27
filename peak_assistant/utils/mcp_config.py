@@ -102,8 +102,8 @@ class OAuth2TokenManager:
         self.auth_config = auth_config
         self.user_id = user_id  # For user-specific tokens
         self.server_url = server_url  # Server URL for auto-deriving discovery URL
-        self.access_token = None
-        self.refresh_token = None
+        self.access_token: Optional[str] = None
+        self.refresh_token: Optional[str] = None
         self.token_expiry = None
         self.token_user_id = None  # User ID from token response
         self._discovered_config = None  # Cache for discovered OAuth config
@@ -257,7 +257,8 @@ class OAuth2TokenManager:
             response.raise_for_status()
             
             token_data = response.json()
-            self.access_token = token_data["access_token"]
+            access_token = token_data["access_token"]
+            self.access_token = access_token
             
             # Extract user ID from token response if present
             self.token_user_id = (
@@ -273,7 +274,7 @@ class OAuth2TokenManager:
             expires_in = token_data.get("expires_in", 3600)  # Default 1 hour
             self.token_expiry = time.time() + expires_in - 300  # Refresh 5 minutes early
             
-            return self.access_token
+            return access_token
     
     async def _refresh_authorization_code_token(self) -> str:
         """Refresh token using authorization code flow refresh token"""
@@ -295,7 +296,8 @@ class OAuth2TokenManager:
             response.raise_for_status()
             
             token_data = response.json()
-            self.access_token = token_data["access_token"]
+            access_token = token_data["access_token"]
+            self.access_token = access_token
             
             # Update refresh token if provided
             if "refresh_token" in token_data:
@@ -306,7 +308,7 @@ class OAuth2TokenManager:
             expires_in = token_data.get("expires_in", 3600)
             self.token_expiry = time.time() + expires_in - 300
             
-            return self.access_token
+            return access_token
     
     async def exchange_authorization_code(self, authorization_code: str, code_verifier: Optional[str] = None) -> str:
         """Exchange authorization code for access token (authorization code flow)"""
@@ -333,7 +335,8 @@ class OAuth2TokenManager:
             response.raise_for_status()
             
             token_data = response.json()
-            self.access_token = token_data["access_token"]
+            access_token = token_data["access_token"]
+            self.access_token = access_token
             self.refresh_token = token_data.get("refresh_token")
             
             # Extract user ID from token response if present
@@ -350,7 +353,7 @@ class OAuth2TokenManager:
             expires_in = token_data.get("expires_in", 3600)
             self.token_expiry = time.time() + expires_in - 300
             
-            return self.access_token
+            return access_token
     
     async def get_authorization_url(self, state: str, code_challenge: Optional[str] = None) -> str:
         """Generate OAuth2 authorization URL for authorization code flow"""
@@ -1049,7 +1052,7 @@ class MCPClientManager:
                         if hasattr(st, 'session_state'):
                             auth_key = f"MCP.{config.name}"
                             logger.debug(f"Looking for auth key: {auth_key}")
-                            logger.debug(f"Available MCP session keys: {[k for k in st.session_state.keys() if k.startswith('MCP.')]}")
+                            logger.debug(f"Available MCP session keys: {[k for k in st.session_state.keys() if isinstance(k, str) and k.startswith('MCP.')]}")
                             
                             if auth_key in st.session_state:
                                 auth_data = st.session_state[auth_key]
@@ -1293,7 +1296,7 @@ _config_manager = None
 _client_manager = None
 
 # Global cleanup management
-_cleanup_managers = weakref.WeakSet()
+_cleanup_managers: weakref.WeakSet[MCPClientManager] = weakref.WeakSet()
 _cleanup_registered = False
 
 def _cleanup_all_managers():

@@ -21,7 +21,7 @@
 # SPDX-License-Identifier: MIT
 
 import asyncio
-from typing import Callable
+from typing import Any, Callable
 from datetime import datetime as dt
 
 import streamlit as st
@@ -29,13 +29,13 @@ from streamlit_option_menu import option_menu
 
 
 def peak_assistant_chat(
-    title: str = None,
-    page_description: str = None,
-    doc_title: str = None,
+    title: str | None = None,
+    page_description: str | None = None,
+    doc_title: str | None = None,
     default_prompt: str = "",
     allow_upload: bool = False,
-    agent_runner: Callable = None,
-    run_button_label: str = None,
+    agent_runner: Callable | None = None,
+    run_button_label: str | None = None,
     debug_agents: bool = False,
 ):
     """
@@ -48,7 +48,7 @@ def peak_assistant_chat(
         raise ValueError("peak_assistant_chat: Title is required for a unique session state.")
     if not doc_title:
         raise ValueError("peak_assistant_chat: Document title is required for a unique session state.")
-    if not agent_runner:
+    if agent_runner is None:
         raise ValueError("peak_assistant_chat: Agent runner is required.")
 
     # Keys for the separate session state variables for chat and document.
@@ -98,7 +98,7 @@ def peak_assistant_chat(
         with st.container(height=500, border=True):
             st.markdown(st.session_state[document_key])
 
-    chat_extra_args = dict()
+    chat_extra_args: dict[str, Any] = dict()
     if allow_upload:
         chat_extra_args = {
             "accept_file": True,
@@ -201,7 +201,7 @@ def peak_assistant_chat(
 def peak_assistant_hypothesis_list(
     title: str = "Hypothesis Generation",
     page_description: str = "Create a hunting hypothesis, or let the assistant generate some for you to choose from.",
-    agent_runner: Callable = None,
+    agent_runner: Callable | None = None,
 ):
 
     st.title(title)
