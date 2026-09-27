@@ -35,9 +35,7 @@ from pathlib import Path
 from peak_assistant.utils.mcp_config import (
     MCPConfigManager,
     AuthType,
-    TransportType,
-    AuthConfig,
-    MCPServerConfig
+    TransportType
 )
 from peak_assistant.utils import ConfigInterpolationError
 

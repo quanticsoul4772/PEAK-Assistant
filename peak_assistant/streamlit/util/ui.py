@@ -20,7 +20,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-import sys
 import asyncio
 from typing import Callable
 from datetime import datetime as dt

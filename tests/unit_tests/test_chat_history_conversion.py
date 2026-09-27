@@ -1,5 +1,4 @@
 """Tests for convert_chat_history_to_user_messages and convert_chat_history_to_text_messages."""
-import pytest
 from autogen_agentchat.messages import TextMessage, UserMessage
 
 from peak_assistant.streamlit.util.helpers import (

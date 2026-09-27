@@ -47,11 +47,11 @@ logging.basicConfig(
     force=True
 )
 
-from dotenv import load_dotenv
-from peak_assistant.utils import find_dotenv_file
+from dotenv import load_dotenv  # noqa: E402
+from peak_assistant.utils import find_dotenv_file  # noqa: E402
 
 # Import streamlit runner functions
-from peak_assistant.streamlit.util.runners import (
+from peak_assistant.streamlit.util.runners import (  # noqa: E402
     run_researcher,
     run_local_data,
     run_hypothesis_generator,
@@ -197,7 +197,7 @@ async def run_workflow_step(step_func, description, session_state, output_key, o
         
         # Show output preview
         preview_len = min(500, len(text_output))
-        print(f"✅ Successfully completed")
+        print("✅ Successfully completed")
         print(f"   Output length: {len(text_output)} chars\n")
         print(f"Output preview:\n{text_output[:preview_len]}")
         if len(text_output) > preview_len:
@@ -329,7 +329,7 @@ async def main():
         print("⚠️  Warning: model_config.json not found in current directory")
         print("    The workflow may fail if model configuration is required\n")
     else:
-        print(f"✅ Found model_config.json\n")
+        print("✅ Found model_config.json\n")
     
     # Load local context
     local_context = load_local_context(args.local_context)
@@ -531,7 +531,7 @@ async def main():
             print("   (--keep-files specified)")
             cleanup_needed = False
         else:
-            print(f"\n🧹 Cleaning up temporary files...")
+            print("\n🧹 Cleaning up temporary files...")
             shutil.rmtree(temp_dir)
             print(f"   ✅ Removed: {temp_dir}")
             cleanup_needed = False

@@ -21,7 +21,6 @@
 # SPDX-License-Identifier: MIT
 
 import streamlit as st
-import sys
 
 from autogen_agentchat.messages import TextMessage
 

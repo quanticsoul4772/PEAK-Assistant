@@ -22,7 +22,6 @@
 
 """Tests for OAuth URL validation to prevent XSS/injection attacks"""
 
-import pytest
 from peak_assistant.streamlit.util.helpers import validate_and_escape_oauth_url
 
 

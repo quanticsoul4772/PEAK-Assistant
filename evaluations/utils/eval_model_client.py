@@ -28,15 +28,14 @@ evaluation scripts that need to make many sequential LLM calls.
 
 from __future__ import annotations
 
-import asyncio
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 # Add parent directory to path to import peak_assistant modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from peak_assistant.utils.model_config_loader import ModelConfigLoader, ModelConfigError
+from peak_assistant.utils.model_config_loader import ModelConfigLoader
 
 
 class EvaluatorModelClient:

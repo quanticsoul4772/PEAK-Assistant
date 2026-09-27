@@ -29,7 +29,6 @@ interpolation in model_config.json files.
 from __future__ import annotations
 
 import sys
-from typing import Optional
 
 from dotenv import load_dotenv
 

@@ -22,7 +22,6 @@
 
 """Tests for mcp-status auth checking functionality"""
 
-import pytest
 from peak_assistant.mcp_status.__main__ import check_auth_status
 from peak_assistant.utils.mcp_config import (
     MCPServerConfig,

@@ -28,10 +28,9 @@ and provides a human-readable summary of provider and agent assignments.
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
-from typing import List, Tuple, Dict, Any, Optional
+from typing import List, Dict, Any, Optional
 from collections import defaultdict
 
 from .model_config_loader import ModelConfigLoader, ModelConfigError
@@ -206,7 +205,7 @@ class ConfigValidator:
         try:
             defaults = self.loader.resolve_agent_config(None)
             used_providers.add(defaults.get("provider"))
-        except:
+        except Exception:
             pass
         
         # Check all known agents
@@ -214,7 +213,7 @@ class ConfigValidator:
             try:
                 agent_config = self.loader.resolve_agent_config(agent_name)
                 used_providers.add(agent_config.get("provider"))
-            except:
+            except Exception:
                 pass
         
         # Find unused providers
@@ -410,7 +409,7 @@ class ConfigValidator:
                         deployment = agent_config.get("deployment", "")
                         if deployment:
                             model = f"{model} ({deployment})"
-                except:
+                except Exception:
                     pass
                 
                 assignments.append((agent_name, provider_name, model, source))
@@ -454,7 +453,7 @@ class ConfigValidator:
                 
                 if provider_name and model:
                     provider_usage[provider_name][model].append(agent_name)
-            except:
+            except Exception:
                 pass
         
         # Print summary
@@ -462,7 +461,7 @@ class ConfigValidator:
             try:
                 provider_config = self.loader.get_provider_config(provider_name)
                 provider_type = provider_config["type"]
-            except:
+            except Exception:
                 provider_type = "unknown"
             
             models = provider_usage[provider_name]

@@ -46,7 +46,6 @@ import re
 import sys
 import time
 import statistics
-import math
 from dataclasses import dataclass, field
 from io import StringIO
 from pathlib import Path
@@ -278,7 +277,7 @@ class HypothesisEvaluator:
                 else:
                     raise ValueError(f"No integer found in response: {text}")
 
-            except (ValueError, json.JSONDecodeError) as e:
+            except (ValueError, json.JSONDecodeError):
                 if attempt < max_retries:
                     if self.log_buffer is not None:
                         self.log_buffer.write(

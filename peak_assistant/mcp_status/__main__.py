@@ -28,8 +28,7 @@ MCP Status Command - Display configuration status of all MCP servers
 import argparse
 import os
 import sys
-from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 from ..utils.mcp_config import MCPConfigManager, AuthType
 
@@ -110,7 +109,7 @@ def print_server_status(server_name: str, server_config, verbose: bool = False):
             auth_desc += " (requires user authentication)"
         print(f"  Auth: {auth_desc}")
     else:
-        print(f"  Auth: none")
+        print("  Auth: none")
     
     # Verbose details
     if verbose:
@@ -119,7 +118,7 @@ def print_server_status(server_name: str, server_config, verbose: bool = False):
             if server_config.args:
                 print(f"  Args: {' '.join(server_config.args)}")
             else:
-                print(f"  Args: None")
+                print("  Args: None")
         elif server_config.transport.value in ["http", "sse"]:
             print(f"  URL: {server_config.url}")
             if server_config.auth and hasattr(server_config.auth, 'discovery_url') and server_config.auth.discovery_url:
@@ -133,37 +132,37 @@ def print_server_status(server_name: str, server_config, verbose: bool = False):
     # Status message
     if status == "ready":
         if server_config.auth and server_config.auth.type == AuthType.BEARER:
-            print(f"  Status: Ready (token configured)")
+            print("  Status: Ready (token configured)")
         elif server_config.auth and server_config.auth.type == AuthType.API_KEY:
-            print(f"  Status: Ready (API key configured)")
+            print("  Status: Ready (API key configured)")
         elif configured_vars:
-            print(f"  Status: Ready (credentials configured)")
+            print("  Status: Ready (credentials configured)")
         else:
-            print(f"  Status: Ready")
+            print("  Status: Ready")
     elif status == "partial":
-        print(f"  Status: Partially configured")
+        print("  Status: Partially configured")
     else:
-        print(f"  Status: Missing credentials")
+        print("  Status: Missing credentials")
     
     # Show configured variables
     if configured_vars:
-        print(f"  ")
-        print(f"  Configured environment variable(s):")
+        print("  ")
+        print("  Configured environment variable(s):")
         for var in configured_vars:
             print(f"    ✓ {var}")
     
     # Show missing variables with export commands
     if missing_vars:
-        print(f"  ")
-        print(f"  Missing environment variable(s):")
+        print("  ")
+        print("  Missing environment variable(s):")
         for var in missing_vars:
             if var.startswith("PEAK_MCP_"):
                 print(f"    ✗ {var}")
             else:
                 print(f"    ✗ {var}")
         
-        print(f"  ")
-        print(f"  To enable, set:")
+        print("  ")
+        print("  To enable, set:")
         for var in missing_vars:
             if var.startswith("PEAK_MCP_"):
                 if "USER_ID" in var:
@@ -172,9 +171,9 @@ def print_server_status(server_name: str, server_config, verbose: bool = False):
                     print(f"    export {var}=\"your_token_here\"")
         
         if verbose:
-            print(f"  ")
-            print(f"  Alternatively, authenticate via Streamlit web interface at:")
-            print(f"    http://localhost:8501")
+            print("  ")
+            print("  Alternatively, authenticate via Streamlit web interface at:")
+            print("    http://localhost:8501")
 
 
 def main():
@@ -207,7 +206,7 @@ def main():
         else:
             config_manager = MCPConfigManager()
             config_file = config_manager.config_file
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         print("✗ Error: No MCP configuration file found")
         print()
         print("  Searched locations:")
