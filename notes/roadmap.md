@@ -1,5 +1,11 @@
 # Roadmap — PEAK × mcp-parallax
 
+> **ARCHIVED 2026-09-27 — roadmap complete (M0–M4 ✅).** Final states:
+> PEAK fork `main` at `f5c042f` (PRs #9–#22), parallax fork `main` at
+> `a372871` (PRs #107–#111). Divergence ledger closed: 7 findings, 0 open.
+> Wrap-up: `project-wrapup.md`. Upstream engagement remains gated on an
+> explicit human decision (see `peak-integration-issue-draft.md`).
+
 Status legend: ✅ done · 🔧 in progress · ⬜ not started.
 All milestones verified against real repo state as of 2026-09-27.
 
