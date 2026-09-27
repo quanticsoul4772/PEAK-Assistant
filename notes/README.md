@@ -64,6 +64,9 @@ local state; local branches may be behind their remotes.
    (2026-09-27; feeds M3 memo attachment).
 6. `m2-demo-transcript.log` — verbatim transcript of the M2 demo run
    (111 lines; committed for provenance).
+7. `m4-implementation-plan.md` — M4 pre-implementation plan (survey of
+   hypothesis-critic call sites, D1 wiring design, mocked-test plan T1–T6,
+   risks). Roadmap M4 items tick only when the feat PR lands.
 
 ## Branch strategy (this repo)
 
