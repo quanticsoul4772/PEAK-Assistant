@@ -54,21 +54,25 @@ Met 2026-09-27 — wiring, transcript excerpts and divergence list in
 binary at `e7f12f8`; Ollama with `qwen2.5:7b`; a model entry with
 `function_calling` flags). No PEAK source file changed.
 
-## M3 — Finalize the integration proposal (fork-only) ⬜
+## M3 — Finalize the integration proposal (fork-only) ✅
 
 **Policy: all work stays in our fork. No issues or PRs on
 `Cisco-Talos/PEAK-Assistant`.**
 
-- ⬜ Finalize `peak-integration-issue-draft.md` as an internal design memo
+- ✅ Finalize `peak-integration-issue-draft.md` as an internal design memo
   (attach demo links/results from M2). Keep it in issue shape so it could be
-  filed upstream *only if* we ever explicitly decide to engage.
-- ⬜ Resolve the maintainer questions as internal design decisions (config vs
-  code, opt-in call policy, output treatment).
+  filed upstream *only if* we ever explicitly decide to engage. **Done
+  2026-09-27: memo finalized, M2 evidence attached (`notes/m2-demo-evidence.md`).**
+- ✅ Resolve the maintainer questions as internal design decisions (config vs
+  code, opt-in call policy, output treatment). **Recorded as D1–D5 in the
+  memo, 2026-09-27.**
 - ⬜ Optionally watch upstream's issues/PRs read-only for context; never post.
 
 **Exit criteria:** memo finalized and decisions recorded in the fork.
+Met 2026-09-27 (decisions D1–D5).
 
-## M4 — First small integration PR in our fork (optional, gated on M3) ⬜
+## M4 — First small integration PR in our fork (optional; M3 gate cleared
+2026-09-27) ⬜
 
 A PR against **our fork's `main` only** — never upstream. Strictly minimal,
 opt-in only:
