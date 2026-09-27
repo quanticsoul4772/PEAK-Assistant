@@ -79,6 +79,16 @@ research-assistant = "peak_assistant.research_assistant.__main__:main"
 validate-config = "peak_assistant.utils.validate_config:main"
 
 
+[tool.mypy]
+# evaluations/utils has __init__.py but evaluations/ does not; without an
+# explicit base mypy derives two module names for the same file.
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+# Neither package ships stubs or a py.typed marker.
+module = ["pandas", "pandas.*", "streamlit_option_menu", "streamlit_option_menu.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
