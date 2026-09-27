@@ -92,6 +92,10 @@ Met 2026-09-27 — fork PR #14 merged (`8297c13`, commit `be294c3`):
 opt-in `hypothesis-verification` group → critic via `--verification-group`,
 allowlist {grounded_verify, verify}, never-raising resolver, ruff/mypy clean,
 222 passed + 1 skipped (`-m "not live"`).
+Live end-to-end validation 2026-09-27: `notes/m4-live-validation.md` — the
+steered critic called `verify` and received a `refuted` ensemble verdict from
+qwen2.5:7b; D3 guidance-only held; unsteered run confirms the default path
+stays silent unless opted in.
 
 ---
 

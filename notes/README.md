@@ -67,6 +67,12 @@ local state; local branches may be behind their remotes.
 7. `m4-implementation-plan.md` — M4 pre-implementation plan (survey of
    hypothesis-critic call sites, D1 wiring design, mocked-test plan T1–T6,
    risks). Roadmap M4 items tick only when the feat PR lands.
+8. `m4-live-validation.md` — live end-to-end validation of the M4 opt-in
+   path (2026-09-27): steered critic calls `verify`, gets a refuted ensemble
+   verdict from qwen2.5:7b, honors guidance-only (D3). Unsteered run shows
+   wiring engages without forcing tool use.
+9. `m4-live-transcript-unsteered.log` / `m4-live-transcript-steered.log` —
+   verbatim transcripts of both validation runs (committed for provenance).
 
 ## Branch strategy (this repo)
 
