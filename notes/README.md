@@ -85,6 +85,10 @@ local state; local branches may be behind their remotes.
 13. `project-wrapup.md` — project wrap-up (2026-09-27): M0–M4 outcomes,
     divergence ledger with dispositions, and the checklist a future upstream
     engagement would need. Roadmap complete; fork-only policy held throughout.
+14. `final-m2.log`, `final-m4-steered.log`, `final-m4-steered2.log`,
+    `final-m4-unsteered.log` — verbatim final smoke-pass transcripts
+    (2026-09-27, post-#109/#110): reproduction matrix in
+    `project-wrapup.md` finding 7 and open item 5.
 
 ## Branch strategy (this repo)
 
