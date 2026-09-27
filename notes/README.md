@@ -58,6 +58,11 @@ local state; local branches may be behind their remotes.
 3. `peak-integration-issue-draft.md` — draft PEAK GitHub issue: opt-in
    heterogeneous verification layer.
 4. `roadmap.md` — M0–M4 milestones and first-week checklist.
+5. `m2-demo-evidence.md` — M2 zero-PEAK-code demo evidence: verbatim config
+   snippets, transcript excerpts, divergence list, exit-criteria mapping
+   (2026-09-27; feeds M3 memo attachment).
+6. `m2-demo-transcript.log` — verbatim transcript of the M2 demo run
+   (111 lines; committed for provenance).
 
 ## Branch strategy (this repo)
 

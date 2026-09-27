@@ -15,7 +15,7 @@ All milestones verified against real repo state as of 2026-09-27.
 - ✅ Every carried-over claim confirmed or corrected (see research notes §8).
 - ✅ SHAs/dates recorded: PEAK `dfabbb0` (2026-06-01), parallax `a539aacc` (2026-07-28, **dirty ×13**), mcp-reasoning `678d711` (2026-09-09).
 - ✅ Deliverables in `notes/` committed on `notes/research`.
-- ⬜ (optional) `uv sync` + local PEAK run to have a working demo environment.
+- ✅ (optional) `uv sync` + local PEAK run — done via the M2 demo (2026-09-27).
 
 **M0 exit criteria:** all met.
 
@@ -36,19 +36,23 @@ Per `parallax-byom-design.md`:
 **Exit criteria:** full tool catalog runs against an OpenAI-compatible endpoint
 with only config changes; anthropic backend wire-identical. All met — delivered
 as quanticsoul4772/mcp-parallax PR #107 (merged `eadda0c`, 2026-09-27).
-Live-endpoint validation lands with the M2 Ollama run.
+Live-endpoint validation landed with the M2 Ollama run — see `notes/m2-demo-evidence.md`.
 
-## M2 — Zero-PEAK-code demo ⬜
+## M2 — Zero-PEAK-code demo ✅
 
-- ⬜ Register parallax in a local `mcp_servers.json` **existing** group (this is
+- ✅ Register parallax in a local `mcp_servers.json` **existing** group (this is
   the only wiring that is config-only — group→agent mapping is code).
-- ⬜ Run one PEAK phase end-to-end with parallax tools available in the
+- ✅ Run one PEAK phase end-to-end with parallax tools available in the
   workbench; capture transcript/output as demo evidence.
-- ⬜ Document the exact `mcpServers`/`serverGroups` snippet (env-interpolated,
+- ✅ Document the exact `mcpServers`/`serverGroups` snippet (env-interpolated,
   no secrets committed) and which tools the agent actually invoked.
 
 **Exit criteria:** reproducible demo on a clean PEAK checkout with only
 `mcp_servers.json` + env added.
+Met 2026-09-27 — wiring, transcript excerpts and divergence list in
+`notes/m2-demo-evidence.md`. Prerequisites are environment-only (built parallax
+binary at `e7f12f8`; Ollama with `qwen2.5:7b`; a model entry with
+`function_calling` flags). No PEAK source file changed.
 
 ## M3 — Finalize the integration proposal (fork-only) ⬜
 
@@ -97,9 +101,9 @@ Day 3–4
 - [x] Write the taxonomy-parity test harness first (it defines "done")
 
 Day 5
-- [ ] M2 demo prep: draft the `mcp_servers.json` snippet with a local
+- [x] M2 demo prep: draft the `mcp_servers.json` snippet with a local
       OpenAI-compatible model (e.g. Ollama) as parallax's backend
-- [ ] Rehearse the demo end-to-end; note every place behavior diverges from
+- [x] Rehearse the demo end-to-end; note every place behavior diverges from
       Anthropic-backend behavior (feeds M1 bug list)
 
 Ongoing hygiene
