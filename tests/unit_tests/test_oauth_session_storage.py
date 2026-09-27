@@ -96,6 +96,35 @@ class TestOAuthSessionAllowlist:
 
 
 class TestOAuthSessionFilePermissions:
+    @staticmethod
+    def _assert_no_broad_principals(path):
+        """Assert no broad well-known SID holds an allow-ACE on the file.
+
+        Windows cannot express POSIX mode bits (st_mode reports 0o666 for any
+        writable file), so verify the file's DACL instead.
+        """
+        win32security = pytest.importorskip("win32security")
+        sd = win32security.GetFileSecurity(
+            path, win32security.DACL_SECURITY_INFORMATION
+        )
+        dacl = sd.GetSecurityDescriptorDacl()
+        assert dacl is not None, "File has a NULL DACL (everyone has full access)"
+        broad_sids = {
+            "S-1-1-0",       # Everyone
+            "S-1-5-11",      # Authenticated Users
+            "S-1-5-32-545",  # Builtin\Users
+            "S-1-5-4",       # Interactive
+            "S-1-5-2",       # Network
+        }
+        for i in range(dacl.GetAceCount()):
+            (ace_type, _flags), _mask, trustee = dacl.GetAce(i)
+            if ace_type != 0:  # ACCESS_ALLOWED_ACE_TYPE
+                continue
+            sid = win32security.ConvertSidToStringSid(trustee)
+            assert sid not in broad_sids, (
+                f"Broad principal {sid} has access to {path}"
+            )
+
     def test_temp_file_is_owner_readable_only(self):
         entries = {"user_session_id": "uid1"}
         mock_session = _make_session(entries)
@@ -107,7 +136,10 @@ class TestOAuthSessionFilePermissions:
             store_session_for_oauth("srv", state)
 
         path = os.path.join(tempfile.gettempdir(), f"peak_oauth_session_{state}.json")
-        file_stat = os.stat(path)
-        # Mask off file type bits; only owner read+write should be set (0o600)
-        permissions = stat.S_IMODE(file_stat.st_mode)
-        assert permissions == 0o600, f"Expected 0o600, got {oct(permissions)}"
+        if os.name == "nt":
+            self._assert_no_broad_principals(path)
+        else:
+            file_stat = os.stat(path)
+            # Mask off file type bits; only owner read+write should be set (0o600)
+            permissions = stat.S_IMODE(file_stat.st_mode)
+            assert permissions == 0o600, f"Expected 0o600, got {oct(permissions)}"
