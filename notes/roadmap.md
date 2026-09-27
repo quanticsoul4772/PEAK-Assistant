@@ -71,23 +71,27 @@ binary at `e7f12f8`; Ollama with `qwen2.5:7b`; a model entry with
 **Exit criteria:** memo finalized and decisions recorded in the fork.
 Met 2026-09-27 (decisions D1–D5).
 
-## M4 — First small integration PR in our fork (optional; M3 gate cleared
-2026-09-27) ⬜
+## M4 — First small integration PR in our fork (optional) ✅
 
 A PR against **our fork's `main` only** — never upstream. Strictly minimal,
 opt-in only:
 
-- ⬜ One agent (hypothesis critic) can receive tools from one configured group
+- ✅ One agent (hypothesis critic) can receive tools from one configured group
   (`hypothesis-verification`).
-- ⬜ Two tools surfaced: `grounded_verify` (claim-vs-artifact), `verify`
-  (advisory).
-- ⬜ Mocked tests only; no live calls in CI.
-- ⬜ **No default behavior change** — identical prompts/outputs when the group
-  is absent.
-- ⬜ PR description states guarantees from the memo's compatibility table.
+- ✅ Two tools surfaced: `grounded_verify` (claim-vs-artifact), `verify`
+  (advisory). — allowlist enforced by `_AllowlistWorkbench`
+- ✅ Mocked tests only; no live calls in CI. — T1–T6 in
+  `tests/unit_tests/test_hypothesis_verification_wiring.py`
+- ✅ **No default behavior change** — identical prompts/outputs when the group
+  is absent. — pinned by T1 construction-parity test
+- ✅ PR description states guarantees from the memo's compatibility table.
 
 **Exit criteria:** PR merged into our fork's `main`; demo (M2) remains the
 fallback value story.
+Met 2026-09-27 — fork PR #14 merged (`8297c13`, commit `be294c3`):
+opt-in `hypothesis-verification` group → critic via `--verification-group`,
+allowlist {grounded_verify, verify}, never-raising resolver, ruff/mypy clean,
+222 passed + 1 skipped (`-m "not live"`).
 
 ---
 
