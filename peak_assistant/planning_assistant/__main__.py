@@ -58,14 +58,14 @@ def main() -> None:
     parser.add_argument(
         "-a",
         "--able_info",
-        help="The Actor, Behavior, Location and Evidence (ABLE) information",
+        help="Path to the ABLE information file (Actor, Behavior, Location, Evidence)",
         required=False,
         default=None,
     )
     parser.add_argument(
         "-d",
         "--data_discovery",
-        help="Data discovery information from previous agents",
+        help="Path to the data discovery output file from previous agents",
         required=False,
         default=None,
     )
@@ -79,7 +79,7 @@ def main() -> None:
     parser.add_argument(
         "-c",
         "--local_context",
-        help="Additional local context to consider",
+        help="Path to the local context file (additional context to consider)",
         required=False,
         default=None,
     )
