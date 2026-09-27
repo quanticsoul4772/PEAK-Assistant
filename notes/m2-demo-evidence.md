@@ -155,9 +155,12 @@ lateral movement inside the victim network." -r <research.md> -a <able.md> -c <c
    `surface` made a real voyage-4 embedding call (`gen_ai.request.model=voyage-4`,
    `cost.usd=1.44e-6`). A strictly keyless demo must scrub every parallax-relevant key
    inside the `env` block (documented here; not exercised in this run).
-2. **parallax routing log mislabels the source** — prints `source=ANTHROPIC_MODEL`
-   although the model resolved from `OPENAI_MODEL` with `backend="openai_compat"`.
-   Cosmetic parallax logging bug (M1 list).
+2. **RESOLVED 2026-09-27** — parallax routing log mislabeled the source: it printed
+   `source=ANTHROPIC_MODEL` although the model resolved from `OPENAI_MODEL` with
+   `backend="openai_compat"`. Fixed by parallax PR #109 (merged `5df9656`, all 8
+   checks green): `RouteSource::Default` now records the backend's real default
+   variable. Verified live — the startup table now prints
+   `source=OPENAI_MODEL` on the Ollama backend.
 3. **PEAK CLI `-a`/`-c` are file paths**, not inline text, despite help text implying
    inline values. Reproducibility quirk, not backend-related.
 4. **Positive:** qwen2.5:7b (7B, local) held the full agent+critic loop — one real
