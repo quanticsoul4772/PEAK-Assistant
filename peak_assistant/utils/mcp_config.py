@@ -26,7 +26,6 @@ import asyncio
 import concurrent.futures
 import json
 import os
-from pathlib import Path
 import sys
 import weakref
 
@@ -1081,7 +1080,7 @@ class MCPClientManager:
                                 logger.error(f"No OAuth data found in Streamlit session state for {config.name}")
                                 return None
                         else:
-                            logger.error(f"Streamlit session state not available")
+                            logger.error("Streamlit session state not available")
                             return None
                     except Exception as e:
                         logger.error(f"Failed to get Streamlit OAuth headers for {config.name}: {e}")
@@ -1136,12 +1135,12 @@ class MCPClientManager:
                         f"OAuth authentication failed for {config.name}:\n"
                         f"  Missing required environment variable(s):\n"
                         + "\n".join(missing_vars) + "\n"
-                        f"  \n"
-                        f"  To use this server in CLI mode, set:\n"
+                        "  \n"
+                        "  To use this server in CLI mode, set:\n"
                         + "\n".join(export_commands) + "\n"
-                        f"  \n"
-                        f"  Alternatively, authenticate via Streamlit web interface.\n"
-                        f"  Server will be skipped."
+                        "  \n"
+                        "  Alternatively, authenticate via Streamlit web interface.\n"
+                        "  Server will be skipped."
                     )
                     return None
         

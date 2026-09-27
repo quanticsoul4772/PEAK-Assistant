@@ -285,7 +285,7 @@ def main():
             print("   (--keep-files specified)")
             cleanup_needed = False
         else:
-            print(f"\n🧹 Cleaning up temporary files...")
+            print("\n🧹 Cleaning up temporary files...")
             shutil.rmtree(temp_dir)
             print(f"   ✅ Removed: {temp_dir}")
             cleanup_needed = False

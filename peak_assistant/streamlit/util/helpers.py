@@ -23,7 +23,6 @@
 from typing import List, Dict, Any, Optional, Tuple
 from autogen_agentchat.messages import TextMessage, UserMessage
 import streamlit as st
-import hashlib
 import html
 import json
 import os
@@ -31,7 +30,7 @@ import secrets
 import tempfile
 import time
 import logging
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse
 from pathlib import Path
 
 # Import MCP configuration classes from centralized location
@@ -1147,7 +1146,7 @@ def get_agent_config_data() -> List[Dict[str, str]]:
                 try:
                     provider_config = loader.get_provider_config(provider_name)
                     provider_type = provider_config["type"]
-                except:
+                except Exception:
                     provider_type = "unknown"
                 
                 agent_data.append({

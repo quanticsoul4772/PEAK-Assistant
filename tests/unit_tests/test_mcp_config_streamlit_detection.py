@@ -24,7 +24,6 @@
 
 import sys
 from unittest.mock import MagicMock
-import pytest
 
 from peak_assistant.utils.mcp_config import _is_streamlit_running
 

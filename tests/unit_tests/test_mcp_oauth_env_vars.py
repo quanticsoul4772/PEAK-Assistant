@@ -22,9 +22,8 @@
 
 """Tests for OAuth environment variable authentication in mcp_config"""
 
-import os
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from peak_assistant.utils.mcp_config import (
     MCPClientManager,

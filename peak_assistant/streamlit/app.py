@@ -41,7 +41,6 @@ from peak_assistant.streamlit.util.helpers import (
     initiate_oauth_flow,
     restore_session_from_oauth,
     exchange_oauth_code_for_token,
-    get_asset_path,
     get_agent_config_data,
     validate_and_escape_oauth_url
 )
@@ -558,7 +557,7 @@ with mcp_servers_tab:
 
             with col6:
                 # Dedicated Test Connection button (always available) on same row
-                if st.button(f"🧪 Test Connection", key=f"test_conn_{server_name}", type="secondary"):
+                if st.button("🧪 Test Connection", key=f"test_conn_{server_name}", type="secondary"):
                     with st.spinner(f"Testing connection to {server_name}..."):
                         import asyncio
                         try:
@@ -676,11 +675,17 @@ with mcp_servers_tab:
                     logger = logging.getLogger(__name__)
                     logger.debug(f"Status for {server_name}: {status_color} - {status_message}")
                     if status_color == "green":
-                        button_type = "primary"; button_disabled = True; button_label = "✅ Connected"
+                        button_type = "primary"
+                        button_disabled = True
+                        button_label = "✅ Connected"
                     elif status_color == "yellow":
-                        button_type = "secondary"; button_disabled = False; button_label = "🔐 Authenticate"
+                        button_type = "secondary"
+                        button_disabled = False
+                        button_label = "🔐 Authenticate"
                     else:
-                        button_type = "secondary"; button_disabled = False; button_label = "❌ Error"
+                        button_type = "secondary"
+                        button_disabled = False
+                        button_label = "❌ Error"
                     if st.button(
                         f"{button_label}",
                         key=f"status_btn_{server_name}",
@@ -718,7 +723,7 @@ with mcp_servers_tab:
                                 except Exception as e:
                                     st.error(f"{server_name}: Connection test failed - {str(e)}")
                 with col6:
-                    if st.button(f"🧪 Test Connection", key=f"test_conn_{server_name}", type="secondary"):
+                    if st.button("🧪 Test Connection", key=f"test_conn_{server_name}", type="secondary"):
                         with st.spinner(f"Testing connection to {server_name}..."):
                             import asyncio
                             try:

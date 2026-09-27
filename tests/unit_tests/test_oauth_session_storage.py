@@ -20,7 +20,6 @@ def _make_session(entries: dict):
 @pytest.fixture()
 def helpers_module():
     """Import helpers with st.session_state mocked at module level."""
-    import importlib
     import peak_assistant.streamlit.util.helpers as mod
     return mod
 

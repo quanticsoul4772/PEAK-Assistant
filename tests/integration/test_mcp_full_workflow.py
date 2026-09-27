@@ -47,10 +47,10 @@ logging.basicConfig(
     force=True
 )
 
-from dotenv import load_dotenv
-from mcp import types
-from peak_assistant.peak_mcp.__main__ import mcp
-from peak_assistant.utils import find_dotenv_file
+from dotenv import load_dotenv  # noqa: E402
+from mcp import types  # noqa: E402
+from peak_assistant.peak_mcp.__main__ import mcp  # noqa: E402
+from peak_assistant.utils import find_dotenv_file  # noqa: E402
 
 
 def configure_logging(verbosity: int):
@@ -134,7 +134,7 @@ async def call_mcp_tool(tool_name, args, description, output_file=None, step_num
         # If it's a tuple, extract the first element (the content list)
         if isinstance(result, tuple):
             if len(result) == 0:
-                print(f"❌ ERROR: Result tuple is empty")
+                print("❌ ERROR: Result tuple is empty")
                 return None
             # Get the first element of the tuple (should be the content list)
             content_list = result[0]
@@ -152,7 +152,7 @@ async def call_mcp_tool(tool_name, args, description, output_file=None, step_num
             return None
         
         if len(content_list) == 0:
-            print(f"❌ ERROR: Content list is empty")
+            print("❌ ERROR: Content list is empty")
             return None
         
         # Get the first content block (should be EmbeddedResource)
@@ -171,12 +171,12 @@ async def call_mcp_tool(tool_name, args, description, output_file=None, step_num
         
         # Extract text from the resource
         if not hasattr(content, 'resource'):
-            print(f"❌ ERROR: EmbeddedResource missing 'resource' attribute")
+            print("❌ ERROR: EmbeddedResource missing 'resource' attribute")
             print(f"Available attributes: {dir(content)}")
             return None
         
         if not hasattr(content.resource, 'text'):
-            print(f"❌ ERROR: Resource missing 'text' attribute")
+            print("❌ ERROR: Resource missing 'text' attribute")
             print(f"Resource type: {type(content.resource)}")
             print(f"Available attributes: {dir(content.resource)}")
             return None
@@ -189,7 +189,7 @@ async def call_mcp_tool(tool_name, args, description, output_file=None, step_num
             return None
         
         # Success! Show what we got
-        print(f"✅ Successfully extracted artifact (EmbeddedResource)")
+        print("✅ Successfully extracted artifact (EmbeddedResource)")
         print(f"   MIME type: {content.resource.mimeType if hasattr(content.resource, 'mimeType') else 'unknown'}")
         print(f"   Text length: {len(text_output)} chars\n")
         
@@ -497,7 +497,7 @@ async def run_workflow(args):
             print("   (--keep-files specified)")
             cleanup_needed = False
         else:
-            print(f"\n🧹 Cleaning up temporary files...")
+            print("\n🧹 Cleaning up temporary files...")
             shutil.rmtree(temp_dir)
             print(f"   ✅ Removed: {temp_dir}")
             cleanup_needed = False
