@@ -149,12 +149,18 @@ lateral movement inside the victim network." -r <research.md> -a <able.md> -c <c
 
 ## 3. Divergence list (feeds the bug lists)
 
-1. **PEAK merges the parent environment into spawned MCP servers.** Shell keys
-   (`VOYAGE_API_KEY`, `BRAVE_API_KEY`, `ANTHROPIC_API_KEY` — all set in the demo shell)
-   leak into parallax despite the `env` block in `mcp_servers.json`. Consequence:
-   `surface` made a real voyage-4 embedding call (`gen_ai.request.model=voyage-4`,
-   `cost.usd=1.44e-6`). A strictly keyless demo must scrub every parallax-relevant key
-   inside the `env` block (documented here; not exercised in this run).
+1. **RESOLVED 2026-09-27 (strict-keyless rerun)** — PEAK merges the parent
+   environment into spawned MCP servers (`mcp_config.py`:
+   `os.environ.copy()` then `update(config.env)` — the block can override but
+   not delete). Shell keys (`VOYAGE_API_KEY`, `BRAVE_API_KEY`, `ANTHROPIC_API_KEY`,
+   `OPENAI_API_KEY` — all set in the demo shell) therefore leaked into parallax
+   despite the `env` block; in the original M2 run `surface` made a real voyage-4
+   embedding call (`gen_ai.request.model=voyage-4`, `cost.usd=1.44e-6`). The scrub
+   pattern that closes it: set each key to the empty string in the `env` block —
+   parallax normalizes blank keys to absent, so the override neutralizes the
+   leak. Verified: rerun with the scrub (`notes/m2-keyless-rerun-transcript.log`,
+   exit 0) shows **zero voyage/brave/anthropic/openai.com markers**, no `surface`
+   call, and the one tool invocation attributing to `qwen2.5:7b`.
 2. **RESOLVED 2026-09-27** — parallax routing log mislabeled the source: it printed
    `source=ANTHROPIC_MODEL` although the model resolved from `OPENAI_MODEL` with
    `backend="openai_compat"`. Fixed by parallax PR #109 (merged `5df9656`, all 8

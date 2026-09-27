@@ -73,6 +73,15 @@ local state; local branches may be behind their remotes.
    wiring engages without forcing tool use.
 9. `m4-live-transcript-unsteered.log` / `m4-live-transcript-steered.log` —
    verbatim transcripts of both validation runs (committed for provenance).
+10. `parallax-telemetry-fixes.md` — decision record for the two parallax
+    follow-ups found during the demos: routing source label (PR #109) and
+    `cost.estimated` on the log line (PR #110), with live verifications and
+    the do-not-zero cost-accounting rationale.
+11. `m2-keyless-rerun-transcript.log` — verbatim transcript of the
+    strict-keyless M2 rerun (empty-string env scrub, zero external calls).
+12. `env-merge-design-note.md` — PEAK-side design proposal (2026-09-27):
+    explicit env-key removal via `null` in `mcp_servers.json` vs empty-string
+    overrides; options analyzed, Option B recommended, first-PR scope.
 
 ## Branch strategy (this repo)
 
