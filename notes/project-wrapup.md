@@ -38,7 +38,7 @@ broad-token risk; rustls 0.23.43 version cap unexplained; live smoke inherits th
 
 The memo (`peak-integration-issue-draft.md`) stays issue-shaped so this arc could
 be filed to `Cisco-Talos/PEAK-Assistant` **only** on an explicit decision to
-engage. If that decision ever comes, the honest checklist is:
+engage. If that decision ever comes, the complete checklist is:
 
 1. **The demo is the value story; PR #14 is the code story.** File the issue
    first with the M2/M4 evidence links — never lead with code. The zero-code
@@ -71,7 +71,7 @@ gated on that explicit decision.
 ## 4. What the fork ships today (end state)
 
 - **parallax** (`2709859`): two backends (anthropic, openai_compat), keyless
-  custom endpoints, honest routing table, self-describing cost telemetry — 538
+  custom endpoints, a routing table that names its sources, self-describing cost telemetry — 538
   lib + 24 config_facts + 72 integration tests, all gates clean.
 - **PEAK fork** (`3d063ef`): M4 opt-in verification wiring (one group, one
   agent, two tools) with T1–T6 mocked tests, README guidance, live validation;

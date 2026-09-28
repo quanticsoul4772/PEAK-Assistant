@@ -42,7 +42,7 @@ Cost is observability-only: no budget, limit, or gate consumes it anywhere.
 `openai_compat` backend does not imply free — the *endpoint* does, and the same
 model id can sit behind a paid hosted gateway, which a model-id-only function cannot
 see; (b) zeroing conflates "costs nothing" with "cost unknown", discarding the
-existing honest signal; (c) tokens and latency are the real resource story on local
+existing cost signal; (c) tokens and latency are the real resource story on local
 backends and are already recorded.
 
 **Fix (chosen instead):** `cost.estimated` on the invocation log line — `false`
