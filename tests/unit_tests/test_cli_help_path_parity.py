@@ -38,6 +38,8 @@ CASES = [
     ("peak_assistant.planning_assistant.__main__", ["able_info", "data_discovery", "local_context"]),
     ("peak_assistant.able_assistant.__main__", ["local_context"]),
     ("peak_assistant.hypothesis_assistant.hypothesis_refiner_cli", ["local_context"]),
+    ("peak_assistant.research_assistant.__main__", ["local_context"]),
+    ("peak_assistant.hypothesis_assistant.hypothesis_assistant_cli", ["local_context"]),
 ]
 
 PATH_PREFIXES = {

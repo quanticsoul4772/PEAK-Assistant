@@ -76,7 +76,7 @@ def main() -> None:
     parser.add_argument(
         "-c",
         "--local_context",
-        help="Additional local context to consider",
+        help="Path to the local context file (additional context to consider)",
         required=False,
         default=None,
     )
