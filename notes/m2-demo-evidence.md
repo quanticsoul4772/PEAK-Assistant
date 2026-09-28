@@ -121,7 +121,7 @@ Telemetry for that invocation — note `voyage-4`, see divergence 1:
 2026-09-27T15:37:20.576875Z  INFO serve_inner: mcp_parallax::telemetry: invocation recorded invocation.id=aeeeff07-526d-4d41-9a68-4bd04370592f session.id=c20e2a3a-930c-405c-8c00-eceee4caf12f gen_ai.operation.name=surface gen_ai.request.model=voyage-4 gen_ai.usage.input_tokens=24 gen_ai.usage.output_tokens=0 gen_ai.response.finish_reasons=success cost.usd=1.4399999999999998e-6 latency.ms=244
 ```
 
-Final report extract — concrete indices/fields, and the agent reports honestly that
+Final report extract — concrete indices/fields, and the agent states plainly that
 the memory tool came up empty:
 
 ```

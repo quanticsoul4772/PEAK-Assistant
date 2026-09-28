@@ -100,7 +100,7 @@ condition. Nothing was persisted into exports; no termination behavior changed.
    telemetry `cost.usd=0.0093` was parallax's notional price-table accounting, not
    spend. Investigated and decided against zeroing for localhost (cost is
    observability-only, and the endpoint — not the backend — decides "free");
-   the honest fix landed instead as parallax PR #110: the invocation log line
+   the fix landed instead as parallax PR #110: the invocation log line
    now carries `cost.estimated` (`true` = Opus-tier fallback over-estimate for
    an unknown model id, `false` = catalog price), verified live on Ollama:
    `cost.usd=0.00684 cost.estimated=true`. See
