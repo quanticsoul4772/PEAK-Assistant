@@ -87,6 +87,11 @@ async def identify_data_sources(
           You may need to inspect data in Splunk to find the correct names.
         - If the exact type of data you expect is not availalble, it is possible that there is a
           similar type of data that could be used instead.
+        - Only report index, sourcetype, or field names that you have actually observed by
+          querying the connected tools. If your available tools cannot search Splunk data,
+          you MUST NOT present an index list as verified — either say so explicitly in the
+          notes, or respond with "No suitable data sources found." Names copied from the
+          research document or from general knowledge are hypotheses, not observations.
         - Do not report indices, sourcetypes or fields that are not relevant. For example,
           it is not necessary to report indices that contain data that is not relevant or
           that contain no data at all. Only report data sources that might be helpful 
@@ -186,6 +191,8 @@ async def identify_data_sources(
 
     # Use the first workbench from the data discovery group
     mcp_workbench = group_workbenches[0]
+    await _warn_if_no_search_tools(mcp_workbench)
+
     return await _run_data_discovery_with_workbench(
         mcp_workbench,
         messages,
@@ -198,6 +205,54 @@ async def identify_data_sources(
         msg_postprocess_callback,
         msg_postprocess_kwargs,
     )
+
+
+async def _warn_if_no_search_tools(mcp_workbench) -> None:
+    """Warn loudly when the discovery workbench cannot search Splunk data.
+
+    Fork fix: the discovery prompt tells the agent to "actually inspect the
+    events in every index ... in Splunk". If the group's servers expose no
+    search-capable tools, that instruction cannot be followed and a small model
+    will silently fabricate a plausible index inventory instead (observed live:
+    "security-alt.Event", "security_event", "powershell-remoting" — names that
+    exist only in training priors, then quoted back by planning as ground
+    truth). A data lookup tool is not required to run discovery, but its
+    absence must be loud on stderr and visible to the agent in the prompt.
+    """
+    try:
+        tool_schemas = await mcp_workbench.list_tools()
+        # autogen_ext's McpWorkbench.list_tools() yields dict payloads (JSON-RPC
+        # tool descriptors), not ToolSchema objects — read the name from either.
+        tool_names = [
+            str(schema.get("name", "") if isinstance(schema, dict) else schema.name).lower()
+            for schema in tool_schemas
+        ]
+    except Exception as exc:  # pragma: no cover - defensive: broken server
+        print(
+            f"WARNING: could not list tools on data discovery workbench "
+            f"({type(exc).__name__}: {exc}); skipping the search-capability check."
+        )
+        return
+
+    data_lookup_markers = (
+        "search",
+        "query",
+        "splunk",
+        "index",
+        "savedsearch",
+        "export",
+        "event",
+    )
+    search_capable = [name for name in tool_names if any(m in name for m in data_lookup_markers)]
+    if not search_capable:
+        print(
+            "WARNING: no search-capable tools in the data discovery group — "
+            "the discovery agent cannot inspect a real Splunk server, so any "
+            "index/sourcetype/field names it reports are UNVERIFIED and may be "
+            "fabricated from the research document rather than observed. "
+            f"Tools seen: {', '.join(sorted(tool_names)) or '(none)'}. "
+            "Add a Splunk MCP server to the group for verified discovery."
+        )
 
 
 async def _run_data_discovery_with_workbench(
