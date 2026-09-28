@@ -76,7 +76,9 @@ local state; local branches may be behind their remotes.
 10. `parallax-telemetry-fixes.md` — decision record for the two parallax
     follow-ups found during the demos: routing source label (PR #109) and
     `cost.estimated` on the log line (PR #110), with live verifications and
-    the do-not-zero cost-accounting rationale.
+    the do-not-zero cost-accounting rationale. Updated 2026-09-28: also records
+    PR #112 — `endpoint=` on every routing line, closing the "reads vendor-bound"
+    naming trap (ledger finding 8).
 11. `m2-keyless-rerun-transcript.log` — verbatim transcript of the
     strict-keyless M2 rerun (empty-string env scrub, zero external calls).
 12. `env-merge-design-note.md` — PEAK-side design proposal (2026-09-27):

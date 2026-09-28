@@ -86,7 +86,30 @@ attributes to `qwen2.5:7b` (`cost.usd=0.00754`, which under the post-#110 binary
 would also carry `cost.estimated=true`). The M2 exit criterion now holds in its
 strict form: clean checkout + `mcp_servers.json` + local Ollama, zero external egress.
 
-## 4. Status ledger
+## 4. `endpoint=` on every routing line — parallax PR #112 (merged `2e5b4c0`)
+
+**Found (2026-09-28, first full-pipeline hunt):** after #109 the routing line was
+accurate but opaque. `source=OPENAI_MODEL` names the environment variable that
+supplied the model; with `OPENAI_API_BASE=http://localhost:11434/v1` the same line
+implicitly claimed an OpenAI destination it did not have, and an operator reading
+the startup table reasonably concluded the run was vendor-bound. The variable
+naming follows the wire dialect (`openai_compat` = the `/v1/chat/completions`
+surface Ollama also serves), not the vendor — but nothing on the line said so.
+
+**Fix:** `log_routing_table` now takes the resolved endpoint and emits it on every
+per-site line, via a new pure helper `Parallax::resolved_endpoint(&Config)` that
+selects `openai_api_base`/`anthropic_api_base` by the active backend — read from
+the same config the client was built against, so table and client cannot disagree.
+Logging only: no wire-format, schema, or routing behavior changes. New test:
+`the_endpoint_resolved_for_the_table_follows_the_backend` (both backends pinned).
+
+**Live verification (post-merge, binary rebuilt):**
+
+```
+INFO mcp_parallax::server: routing resolved call_site="verify" tier="judgment" model=qwen2.5:7b source=OPENAI_MODEL endpoint=http://localhost:11434/v1
+```
+
+## 5. Status ledger
 
 | Item | Status |
 |---|---|
@@ -95,3 +118,4 @@ strict form: clean checkout + `mcp_servers.json` + local Ollama, zero external e
 | Divergence 3 — PEAK CLI `-a`/`-c` file-path quirk | documented (upstream-shaped, low priority) |
 | Divergence 4 — 7B model holds the loop | positive finding (see M2/M4 evidence) |
 | cost.usd on localhost | RESOLVED as documentation + `cost.estimated` (PR #110); zeroing declined |
+| #8 — `source=OPENAI_MODEL` reads vendor-bound on local runs | RESOLVED (parallax PR #112: `endpoint=` on every routing line; live-verified) |

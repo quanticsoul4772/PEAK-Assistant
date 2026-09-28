@@ -167,6 +167,14 @@ lateral movement inside the victim network." -r <research.md> -a <able.md> -c <c
    checks green): `RouteSource::Default` now records the backend's real default
    variable. Verified live — the startup table now prints
    `source=OPENAI_MODEL` on the Ollama backend.
+   **Follow-up 2026-09-28 (#112):** the corrected label stayed correct-but-cryptic —
+   `source=OPENAI_MODEL` names the *variable* that supplied the model, but with
+   `OPENAI_API_BASE=http://localhost:11434/v1` the vendor-suggestive spelling made the
+   line read as OpenAI-bound on a fully local run (operator query: "I am not using
+   openai"). parallax PR #112 (merged `2e5b4c0`) adds `endpoint=` to every routing
+   line, read from the same config the client was built against:
+   `source=OPENAI_MODEL endpoint=http://localhost:11434/v1`. Verified live on the
+   rebuilt binary.
 3. **RESOLVED 2026-09-27** — PEAK CLI `-a`/`-c` (and planning's `-d`) are file paths,
    not inline text, despite help text implying inline values. Fixed by aligning the
    help text across all four CLIs (`data_assistant`, `planning_assistant`,
