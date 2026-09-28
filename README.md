@@ -113,6 +113,23 @@ In this example configuration, we use Tavily for Internet searches, [Atlassian's
 
 Feel free to substitute MCP servers with functional equivalents. For example, if you have a different Internet search provider, replace the Tavily configuration with whatever you're using.
 
+A complete, ready-to-copy configuration covering all three groups is shipped as
+[`mcp_servers.json.example`](mcp_servers.json.example) — it wires the
+[Splunk MCP server](https://github.com/splunk/splunk-mcp-server2) (Python
+implementation, stdio mode) into `data_discovery`, alongside the optional
+parallax corrective-memory server. On first run, if no `mcp_servers.json`
+exists, PEAK copies the example as a starting point.
+
+**Why the search server matters for data discovery:** the discovery agent's
+prompt instructs it to inspect real events in your SIEM. If the
+`data_discovery` group has no search-capable tools, PEAK prints a loud
+`WARNING: no search-capable tools ...` line and any index/sourcetype/field
+names in the discovery report are unverified model suggestions, not
+observations. With `splunk-mcp` connected (tools such as `search_oneshot`,
+`get_indexes`), the same agent grounds its report in your actual indices.
+Secrets are supplied via environment-variable interpolation (`${VAR}`),
+never stored in the file.
+
 ### Telling the Assistant Which MCP Servers to Use
 In addition to defining the servers, you'll also have to add them to the appropriate MCP server groups, to let the different agents know which they should be using. 
 

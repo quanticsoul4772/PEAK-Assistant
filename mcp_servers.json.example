@@ -1,0 +1,47 @@
+{
+  "mcpServers": {
+    "tavily-search": {
+      "transport": "stdio",
+      "description": "Provides Internet searches",
+      "command": "npx",
+      "args": ["-y", "tavily-mcp@0.1.2"],
+      "env": {
+        "TAVILY_API_KEY": "${TAVILY_API_KEY}"
+      }
+    },
+    "splunk-mcp": {
+      "transport": "stdio",
+      "description": "Connect to a running Splunk server and run searches (splunk/splunk-mcp-server2, Python implementation).",
+      "command": "python",
+      "args": ["/path/to/splunk-mcp-server2/python/server.py"],
+      "env": {
+        "TRANSPORT": "stdio",
+        "SPLUNK_HOST": "${SPLUNK_HOST}",
+        "SPLUNK_PORT": "${SPLUNK_PORT}",
+        "SPLUNK_TOKEN": "${SPLUNK_TOKEN}",
+        "VERIFY_SSL": "false"
+      }
+    },
+    "parallax": {
+      "transport": "stdio",
+      "description": "parallax corrective-memory tools on a BYOM backend (see notes/parallax-byom-design.md).",
+      "command": "/path/to/mcp-parallax/target/release/mcp-parallax",
+      "env": {
+        "PARALLAX_BACKEND": "openai_compat",
+        "OPENAI_API_BASE": "${OPENAI_API_BASE}",
+        "OPENAI_MODEL": "${OPENAI_MODEL}",
+        "OPENAI_API_KEY": "",
+        "ANTHROPIC_API_KEY": "",
+        "VOYAGE_API_KEY": "",
+        "BRAVE_API_KEY": "",
+        "DATABASE_PATH": "${PARALLAX_DATABASE_PATH}"
+      }
+    }
+  },
+  "serverGroups": {
+    "research-external": ["tavily-search"],
+    "local-data-search": ["tavily-search"],
+    "data_discovery": ["splunk-mcp", "parallax"],
+    "hypothesis-verification": ["parallax"]
+  }
+}
