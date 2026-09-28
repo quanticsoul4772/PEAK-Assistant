@@ -28,6 +28,7 @@ zero pushes, PRs, or issues to `Cisco-Talos/PEAK-Assistant`; all work in the
 | 5 | parallax `cost.usd` on local models looked like real spend (Opus-tier fallback pricing) | RESOLVED by decision + PR #110: zeroing declined (endpoint, not backend, decides "free"; cost is observability-only); `cost.estimated` added to the log line, live-verified both success and cancel paths |
 | 6 | Small models need steering to use verification tools (unsteered 7B critic never called) | Documented in `m4-live-validation.md`; a prompting concern, not a wiring one |
 | 7 | Small models send capitalized effort values (`"effort":"Medium"`); parallax's derived serde impl rejected them exact-match while the env-var path was already case-insensitive | RESOLVED — parallax PR #111 (`a372871`): manual `Deserialize` delegating to `Effort::parse`, schema unchanged (still lowercase), errors still name variants; live-verified `"Medium"` now returns a verdict |
+| 8 | Correct-but-cryptic attribution: the post-#109 routing line said `source=OPENAI_MODEL` (true — the env var that supplied the model) while the endpoint was localhost, so a keyless local run read as OpenAI-bound | RESOLVED — parallax PR #112 (`2e5b4c0`): every routing line carries `endpoint=<api base>` from the active backend's config; live-verified `endpoint=http://localhost:11434/v1` beside `source=OPENAI_MODEL` |
 
 Carried-over items that predate this arc and remain open: `is_capability_rejection`
 broad-token risk; rustls 0.23.43 version cap unexplained; live smoke inherits the
