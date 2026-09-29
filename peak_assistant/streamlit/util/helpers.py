@@ -729,9 +729,13 @@ async def test_mcp_connection(server_name: str, server_config: MCPServerConfig) 
                 from autogen_ext.tools.mcp import McpWorkbench, StdioServerParams
                 
                 # Build complete subprocess environment (mirrors CLI in mcp_config.py):
-                # apply string overrides, then strip null-marked keys.
-                from peak_assistant.utils.mcp_config import merge_server_env
-                env = merge_server_env(os.environ, server_config.env)
+                # resolve inheritance mode, apply string overrides, strip null-marked keys.
+                from peak_assistant.utils.mcp_config import resolve_server_env
+                env = resolve_server_env(
+                    os.environ,
+                    server_config.env,
+                    server_config.inherit_environment,
+                )
 
                 server_params = StdioServerParams(
                     command=server_config.command,

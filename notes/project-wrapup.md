@@ -118,8 +118,10 @@ gated on that explicit decision.
    first-PR scope in `env-merge-design-note.md` section 4).~~ Null-key
    removal IMPLEMENTED (fork): `merge_server_env` in `mcp_config.py`
    applies string overrides then strips `null`-marked keys from every
-   spawned stdio MCP server; `mcp-status -v` shows removals as `-KEY`;
-   `inheritEnvironment` allowlist mode remains a possible follow-up.
+   spawned stdio MCP server; `mcp-status -v` shows removals as `-KEY`.
+   The design note's optional companion knob, `inheritEnvironment: false`
+   (SDK-style minimal allowlist base, per-server or top-level default), is
+   ALSO IMPLEMENTED in the same chain (`resolve_server_env`).
 3. Small-model sampling variance: tool usage in M2/M4 runs is not deterministic
    at 7B scale (final smoke pass: one M2 run skipped tools; one M4 attempt sent
    `"Medium"` — the rejection itself fixed by parallax PR #111). Final
