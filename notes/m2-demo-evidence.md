@@ -216,6 +216,17 @@ The durable fix is the second one: a search-capable group. Verbatim transcripts:
 `discovery-ungrounded-parallax.log` (warning firing) and
 `discovery-grounded-splunk.log` (real `get_indexes` round-trip).
 
+## 3c. Finding 10 (2026-09-29): planning ignores its grounding
+
+On the grounded-Splunk H1 run the plan cited indices discovery had reported
+absent and produced invalid SPL (`tstats ... FROM_UNIXTIME(_time) ...`); the
+critic approved it. Only 1 of 6 plan queries was executable, with 0 events.
+Related failure fixed in the same arc: the discovery agent echoed
+`YYY-TERMINATE-YYY` inside its report, which the planning stage's
+TextMentionTermination matched on its first input message — 52 microseconds to
+"no plan was generated". Sentinel stripping landed in PEAK PR #30; planner
+grounding remains open. Full disposition: `project-wrapup.md` row 10.
+
 ## 4. Exit-criteria mapping
 
 > Exit criteria: reproducible demo on a clean PEAK checkout with only

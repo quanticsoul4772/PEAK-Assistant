@@ -1,11 +1,11 @@
 # Roadmap — PEAK × mcp-parallax
 
 > **ARCHIVED 2026-09-27 — roadmap complete (M0–M4 ✅).** Final states:
-> PEAK fork `main` (PRs #9–#28), parallax fork `main` at `2e5b4c0`
-> (PRs #107–#112). Divergence ledger: 9 findings, 0 open (finding 9 —
-> discovery fail-open — resolved by PEAK #26/#27 and validated grounded
-> against a live Splunk trial container 2026-09-28).
-> (Banner updated 2026-09-28: findings 8–9, PRs #25–#28.)
+> PEAK fork `main` (PRs #9–#29; #30 sentinel fix open), parallax fork
+> `main` at `2e5b4c0` (PRs #107–#112). Divergence ledger: 10 findings —
+> 1 open (finding 10, planner grounding); findings 8–9 resolved and
+> validated against a live Splunk trial container 2026-09-28/29.
+> (Banner updated 2026-09-29: findings 8–10, PRs #25–#30.)
 > Wrap-up: `project-wrapup.md`. Upstream engagement remains gated on an
 > explicit human decision (see `peak-integration-issue-draft.md`).
 
