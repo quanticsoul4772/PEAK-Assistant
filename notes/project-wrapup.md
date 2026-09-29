@@ -2,7 +2,7 @@
 
 Date: 2026-09-27 (single-day arc, M0 through wrap-up); environment-hardening
 and hygiene arcs continued through 2026-09-29. Final states: PEAK fork
-`main` at `d84313d` (PRs #9–#40 merged); parallax fork `main` at `62ef1bd`
+`main` at `3cf169f` (PRs #9–#46 merged); parallax fork `main` at `62ef1bd`
 (PR #113). Policy held throughout: zero pushes, PRs, or issues to
 `Cisco-Talos/PEAK-Assistant`; all work in the `quanticsoul4772` forks.
 
@@ -108,13 +108,16 @@ gated on that explicit decision.
   ladder rungs on a dead key; "unknown tool" no longer hides as a capability signal);
   PR #114 gave the opt-in live smoke the production 120 s timeout instead of
   `test_config`'s 2 s fast-fail.
-- **PEAK fork** (`d84313d`, PRs #9–#40 merged): M4 opt-in verification wiring (one group, one
+- **PEAK fork** (`3cf169f`, PRs #9–#46 merged): M4 opt-in verification wiring (one group, one
   agent, two tools) with T1–T6 mocked tests, README guidance, live validation;
   discovery-grounding and planner-grounding enforcement (PRs #26, #30, #32–#35);
   hybrid file-or-inline CLI content flags (#37); null-key env removal (#39) and the
   `inheritEnvironment` strict mode (#40); agent/group config entries now layer over
   defaults instead of shadowing them (#38 — found live: an empty "agents" stub used to
-  kill startup with `No 'provider' field found`); a research-notes workspace
+  kill startup with `No 'provider' field found`); case-insensitive SPL fence
+  extraction in the grounding checks (#44, from the head-to-head);
+  `mcp-status` resolves the effective inheritance mode (#45); `notes/*.md`
+  trackable without `git add -f` (#46); a research-notes workspace
   documenting every decision and every transcript.
 - **Reproducibility**: the M2/M4 demos rerun from a clean checkout with only
   `mcp_servers.json` (+ local Ollama); strict-keyless variant makes zero
@@ -137,7 +140,10 @@ gated on that explicit decision.
    discovery runs but executed real SPL in only 1/10; llama3.1:8b called
    tools 10/10 with real SPL in 6/10 (5× duration swing). The #32–#35
    grounding chain held in 20/20 runs (zero fabricated indices, `UNVERIFIED`
-   silent) — variance now costs depth, not grounding.
+   silent) — variance now costs depth, not grounding. Follow-up: local
+   config split applied (discovery → llama, planning → qwen via #38's
+   layering); 6 discovery runs under the split confirmed llama's real-SPL
+   depth at 3/6 — an advantage, not a guarantee.
 4. ~~Carried-over hygiene: `is_capability_rejection` broad-token risk, rustls
    cap, live-smoke timeout.~~ CLOSED 2026-09-29: `is_capability_rejection`
    fixed in parallax PR #113 (400-only + token co-occurrence, 4 regression
