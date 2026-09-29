@@ -1,9 +1,10 @@
 # Project wrap-up — PEAK × mcp-parallax integration research
 
-Date: 2026-09-27 (single-day arc, M0 through wrap-up). Final states: PEAK fork
-`main` at `663ea46` (PRs #9–#35 merged); parallax fork `main` at `2709859`. Policy held throughout:
-zero pushes, PRs, or issues to `Cisco-Talos/PEAK-Assistant`; all work in the
-`quanticsoul4772` forks.
+Date: 2026-09-27 (single-day arc, M0 through wrap-up); environment-hardening
+and hygiene arcs continued through 2026-09-29. Final states: PEAK fork
+`main` at `d84313d` (PRs #9–#40 merged); parallax fork `main` at `62ef1bd`
+(PR #113). Policy held throughout: zero pushes, PRs, or issues to
+`Cisco-Talos/PEAK-Assistant`; all work in the `quanticsoul4772` forks.
 
 ## 1. Milestone outcomes (roadmap complete)
 
@@ -21,9 +22,9 @@ zero pushes, PRs, or issues to `Cisco-Talos/PEAK-Assistant`; all work in the
 
 | # | Finding | Disposition |
 |---|---|---|
-| 1 | PEAK's env merge (`os.environ.copy()` + `update`) leaks parent-shell credentials into every spawned MCP server; parallax's key-presence features activated (`voyage-4` embedding call in the M2 run) | RESOLVED twice: empty-string scrub demonstrated strict-keyless (config-only); general fix designed as `null`-key removal (`env-merge-design-note.md`, Option B recommended) |
+| 1 | PEAK's env merge (`os.environ.copy()` + `update`) leaks parent-shell credentials into every spawned MCP server; parallax's key-presence features activated (`voyage-4` embedding call in the M2 run) | RESOLVED by implementation (fork), both halves of the design note: PEAK PR #39 — null-key removal (`merge_server_env` two-pass merge; `"KEY": null` strips the key from the spawned server's env; `mcp-status -v` shows removals as `-KEY`); PEAK PR #40 — optional `inheritEnvironment: false` (SDK-style minimal allowlist base, per-server or top-level default; streamlit connect-check shares `resolve_server_env`). Verified live 2026-09-29: with bait keys exported in the parent shell, neither reached the parallax child env and zero external egress in the transcript; local `mcp_servers.json` now runs both parallax blocks in strict mode with all-null key stubs |
 | 2 | parallax routing log printed `source=ANTHROPIC_MODEL` on `openai_compat` | RESOLVED — parallax PR #109 (`DefaultVar`), all 8 CI checks green, live-verified `source=OPENAI_MODEL` |
-| 3 | PEAK CLI `-a`/`-c` are file paths despite help text implying inline values | RESOLVED (fork) in both directions: PR `8b88d81` aligned help text to "Path to ..." across all 6 CLIs (pinned by `test_cli_help_path_parity.py`), then the hybrid loader (`peak_assistant/utils/cli_inputs.py`) made every affected flag accept inline content too — existing file paths read as before, path-shaped-but-missing values still fail loudly, plain text passes through as content. Help text documents both forms |
+| 3 | PEAK CLI `-a`/`-c` are file paths despite help text implying inline values | RESOLVED (fork) in both directions: PEAK PR (commit `8b88d81`) aligned help text to "Path to ..." across all 6 CLIs (pinned by `test_cli_help_path_parity.py`), then PEAK PR #37 (commit `a5bcba2`) added the hybrid loader (`peak_assistant/utils/cli_inputs.py`) so every affected flag accepts inline content too — existing file paths read as before, path-shaped-but-missing values still fail loudly, plain text passes through as content. Help text documents both forms; live-verified in the hybrid-flags smoke |
 | 4 | Positive: qwen2.5:7b held the full agent+critic loop (real tool call, coherent report, clean `YYY-TERMINATE-YYY`), and in M4 chose the contract-correct tool (`verify` over `grounded_verify`) | Recorded as evidence for the heterogeneous-verification argument |
 | 5 | parallax `cost.usd` on local models looked like real spend (Opus-tier fallback pricing) | RESOLVED by decision + PR #110: zeroing declined (endpoint, not backend, decides "free"; cost is observability-only); `cost.estimated` added to the log line, live-verified both success and cancel paths |
 | 6 | Small models need steering to use verification tools (unsteered 7B critic never called) | Documented in `m4-live-validation.md`; a prompting concern, not a wiring one |
@@ -99,13 +100,22 @@ gated on that explicit decision.
 
 ## 4. What the fork ships today (end state)
 
-- **parallax** (`2709859`): two backends (anthropic, openai_compat), keyless
-  custom endpoints, a routing table that names its sources, self-describing cost telemetry — 538
-  lib + 24 config_facts + 72 integration tests, all gates clean.
-- **PEAK fork** (`663ea46`, PRs #9–#35 merged): M4 opt-in verification wiring (one group, one
+- **parallax** (`62ef1bd`, PRs #107–#114): two backends (anthropic, openai_compat), keyless
+  custom endpoints, a routing table that names its sources, self-describing cost telemetry — 545
+  lib + 24 config_facts + 72 integration tests, all gates clean. Hygiene arc 2026-09-29:
+  PR #113 tightened `is_capability_rejection` (400-only + parameter/rejection-phrase
+  co-occurrence — an auth failure phrased "unsupported auth scheme" no longer degrades four
+  ladder rungs on a dead key; "unknown tool" no longer hides as a capability signal);
+  PR #114 gave the opt-in live smoke the production 120 s timeout instead of
+  `test_config`'s 2 s fast-fail.
+- **PEAK fork** (`d84313d`, PRs #9–#40 merged): M4 opt-in verification wiring (one group, one
   agent, two tools) with T1–T6 mocked tests, README guidance, live validation;
   discovery-grounding and planner-grounding enforcement (PRs #26, #30, #32–#35);
-  a research-notes workspace documenting every decision and every transcript.
+  hybrid file-or-inline CLI content flags (#37); null-key env removal (#39) and the
+  `inheritEnvironment` strict mode (#40); agent/group config entries now layer over
+  defaults instead of shadowing them (#38 — found live: an empty "agents" stub used to
+  kill startup with `No 'provider' field found`); a research-notes workspace
+  documenting every decision and every transcript.
 - **Reproducibility**: the M2/M4 demos rerun from a clean checkout with only
   `mcp_servers.json` (+ local Ollama); strict-keyless variant makes zero
   external calls.
@@ -122,11 +132,17 @@ gated on that explicit decision.
    The design note's optional companion knob, `inheritEnvironment: false`
    (SDK-style minimal allowlist base, per-server or top-level default), is
    ALSO IMPLEMENTED in the same chain (`resolve_server_env`).
-3. Small-model sampling variance: tool usage in M2/M4 runs is not deterministic
-   at 7B scale (final smoke pass: one M2 run skipped tools; one M4 attempt sent
-   `"Medium"` — the rejection itself fixed by parallax PR #111). Final
-   transcripts: `final-m2.log`, `final-m4-steered.log`,
-   `final-m4-steered2.log`, `final-m4-unsteered.log`.
-4. Carried-over hygiene: `is_capability_rejection` broad-token risk, rustls
-   cap, live-smoke timeout.
+3. Small-model sampling variance: MEASURED 2026-09-29 — 20-run controlled
+   experiment (`notes/7b-variance.md`): qwen2.5:7b called tools in 9/10
+   discovery runs but executed real SPL in only 1/10; llama3.1:8b called
+   tools 10/10 with real SPL in 6/10 (5× duration swing). The #32–#35
+   grounding chain held in 20/20 runs (zero fabricated indices, `UNVERIFIED`
+   silent) — variance now costs depth, not grounding.
+4. ~~Carried-over hygiene: `is_capability_rejection` broad-token risk, rustls
+   cap, live-smoke timeout.~~ CLOSED 2026-09-29: `is_capability_rejection`
+   fixed in parallax PR #113 (400-only + token co-occurrence, 4 regression
+   tests); live-smoke timeout fixed in parallax PR #114 (production 120 s);
+   the "rustls cap" was never our pin — the lockfile now resolves rustls
+   0.23.45 through reqwest 0.13.5's normal dependency flow (`cargo tree -i
+   rustls`), no action taken or needed.
 5. Upstream engagement — explicitly gated on a human decision, per the memo.
