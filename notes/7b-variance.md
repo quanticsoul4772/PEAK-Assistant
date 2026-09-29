@@ -61,3 +61,44 @@ Variance *within* each model, same prompt:
    name without it). Added locally; worth adding to
    `mcp_servers.json.example`-style documentation if llama becomes a
    documented alternative.
+
+## Head-to-head: planning on qwen vs llama discovery reports
+
+Date: 2026-09-29. One discovery report generated per model (both exit 0,
+both grounded), then 5 planning runs per report (10 plans, qwen2.5:7b
+planner for both arms, identical prompts). Metrics computed with the
+deterministic rules from `plan_grounding.py` (fenced-`spl` extraction,
+FROM_UNIXTIME ban, tstats-after-pipe check).
+
+| Metric | Plans on qwen report | Plans on llama report |
+|---|---|---|
+| Exit 0 | 5/5 | 5/5 |
+| GROUNDING WARNING/ERROR | 0/5 | 0/5 |
+| Indices cited | winrm_hunt only, 5/5 | winrm_hunt only, 5/5 |
+| SPL queries extracted | 78 | 100 |
+| Pass deterministic validity | **65/78 (83%)** | **73/100 (73%)** |
+| `tstats` after a pipe (invalid) | 13 | 27 |
+| Fence-case typos (```` ```sPL ````) | 0 | 24 (one whole run used `sPL`) |
+| Fields used match discovery report | yes (ProcessCommandLine/ProcessCreatorUser/ProcessParentProcessId dominate) | partially — mostly `raw=` wildcard searches, not the structured fields llama's own report claimed existed |
+
+Reading:
+
+- **Grounding is a solved layer**: 10/10 plans fully grounded regardless of
+  which model produced the discovery report — the #32–#35 chain is
+  model-independent at the plan stage.
+- **Query quality tracks the discovery report's specificity.** The qwen
+  report named concrete CIM-style fields (ProcessCommandLine, …), and plans
+  built on it emitted 83% deterministic-valid queries referencing those
+  fields. The llama report named only generic fields (host, user, raw),
+  and its plans leaned on `raw=*powershell.exe*` wildcard scans — valid
+  SPL less often (73%), and structurally weaker (full-scan wildcards vs
+  field filters). Garbage-in echoes: a vague discovery report degrades the
+  plan even when the planner is identical.
+- **New failure shape found**: llama wrote 24 fenced blocks as ```` ```sPL ````
+  — a fence typo that would defeat any extraction expecting lowercase
+  `spl` (plan_grounding is case-insensitive on the content checks, but a
+  strict extractor is not). Worth a tolerant-extraction fix in
+  `plan_grounding.py::extract_spl_queries` if llama becomes a default.
+- Same caveat as the parent experiment: 7B sampling variance means single
+  runs differ; these are 5-run aggregates, directionally consistent but
+  not statistical proof.
