@@ -114,8 +114,12 @@ gated on that explicit decision.
 
 1. ~~PEAK CLI `-a`/`-c` file-path quirk (divergence 3).~~ RESOLVED — hybrid
    file-or-inline flags (see divergence 3 in §2).
-2. `inheritEnvironment` / null-key removal implementation (design recorded;
-   first-PR scope in `env-merge-design-note.md` section 4).
+2. ~~`inheritEnvironment` / null-key removal implementation (design recorded;
+   first-PR scope in `env-merge-design-note.md` section 4).~~ Null-key
+   removal IMPLEMENTED (fork): `merge_server_env` in `mcp_config.py`
+   applies string overrides then strips `null`-marked keys from every
+   spawned stdio MCP server; `mcp-status -v` shows removals as `-KEY`;
+   `inheritEnvironment` allowlist mode remains a possible follow-up.
 3. Small-model sampling variance: tool usage in M2/M4 runs is not deterministic
    at 7B scale (final smoke pass: one M2 run skipped tools; one M4 attempt sent
    `"Medium"` — the rejection itself fixed by parallax PR #111). Final

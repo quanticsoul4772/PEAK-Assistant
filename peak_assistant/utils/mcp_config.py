@@ -89,11 +89,53 @@ class MCPServerConfig:
     transport: TransportType = TransportType.STDIO
     command: Optional[str] = None
     args: Optional[List[str]] = None
-    env: Optional[Dict[str, str]] = None
+    # Values are strings to set; a None value means "remove this key from the
+    # child environment" (it is never passed to the spawned server).
+    env: Optional[Dict[str, Optional[str]]] = None
     url: Optional[str] = None
     auth: Optional[AuthConfig] = None
     description: Optional[str] = None
     timeout: int = 30
+
+
+def merge_server_env(parent_env: Any, server_env: Optional[Dict[str, Optional[str]]]) -> Dict[str, str]:
+    """Build a child-process environment from the parent env and server config.
+
+    Two passes, per the env-merge design note (fork fix, divergence 1):
+
+    1. Apply every configured string value over the parent environment
+       (``dict.update`` semantics — a config value overrides an inherited one).
+    2. Drop every key whose configured value is ``None`` (JSON ``null``).
+
+    A ``null`` value is therefore an explicit, cross-server removal syntax:
+    it strips a credential from the child environment instead of merely
+    overriding it, so spawned MCP servers receive only what they are given.
+    Removing an absent key is a no-op. The empty-string override trick
+    (``"KEY": ""``) remains valid for servers that normalize blanks.
+
+    Args:
+        parent_env: The parent environment (e.g. ``os.environ`` snapshot).
+        server_env: The server's configured ``env`` mapping (values may be
+            ``None`` to request removal). ``None`` or empty means no changes.
+
+    Returns:
+        A new dict; the input is never mutated.
+    """
+    env = dict(parent_env)
+    if not server_env:
+        return env
+
+    # Pass 1: apply string values (overrides)
+    for key, value in server_env.items():
+        if value is not None:
+            env[key] = value
+
+    # Pass 2: remove null-marked keys
+    for key, value in server_env.items():
+        if value is None:
+            env.pop(key, None)
+
+    return env
 
 class OAuth2TokenManager:
     """Manages OAuth2 token acquisition and refresh"""
@@ -953,13 +995,20 @@ class MCPClientManager:
             logger.error(f"No command specified for stdio server: {server_name}")
             return False
         
-        # Set up environment variables
-        env = os.environ.copy()
+        # Set up environment variables: apply configured values, then strip
+        # keys explicitly marked for removal with a null (JSON null) value.
+        env = merge_server_env(os.environ, config.env)
         if config.env:
-            env.update(config.env)
-            logger.info(f"Setting environment variables for {server_name}: {list(config.env.keys())}")
+            logger.info(
+                f"Setting environment variables for {server_name}: "
+                f"{[k for k, v in config.env.items() if v is not None]}"
+            )
+            removed = [k for k, v in config.env.items() if v is None]
+            if removed:
+                logger.info(f"Removing inherited environment variables for {server_name}: {removed}")
             for key, value in config.env.items():
-                logger.debug(f"  {key}={'*' * len(value) if 'PASS' in key.upper() else value}")
+                if value is not None:
+                    logger.debug(f"  {key}={'*' * len(value) if 'PASS' in key.upper() else value}")
         
         # Create stdio server parameters
         # Fix: Ensure args is properly formatted for StdioServerParams

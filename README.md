@@ -130,6 +130,25 @@ observations. With `splunk-mcp` connected (tools such as `search_oneshot`,
 Secrets are supplied via environment-variable interpolation (`${VAR}`),
 never stored in the file.
 
+**Environment scoping (`null` removes an inherited key):** each spawned
+MCP server receives your full shell environment by default. To strip a
+credential a server must never see, set its `env` value to `null`:
+
+```json
+"env": {
+  "PARALLAX_BACKEND": "openai_compat",
+  "VOYAGE_API_KEY": null,
+  "BRAVE_API_KEY": null
+}
+```
+
+String values override the inherited environment as usual; `null` values
+delete the key from the spawned server's environment entirely (removal of
+an absent key is a no-op). `mcp-status -v` lists removals as `-KEY` lines.
+The empty-string form (`"KEY": ""`) still works for servers that treat
+blank values as unset, but `null` is the explicit, server-independent way
+to keep a credential from reaching a child process.
+
 The same grounding guarantee extends to hunt plans: after generation, the
 planning stage checks every plan against the data discovery report and fails
 with a `GROUNDING ERROR` if the plan cites indices absent from the report or
