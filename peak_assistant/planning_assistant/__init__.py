@@ -30,6 +30,8 @@ from autogen_agentchat.conditions import TextMentionTermination
 from autogen_agentchat.base import TaskResult
 
 from ..utils.llm_factory import get_model_client
+from ..utils.plan_grounding import check_plan_grounding
+from ..utils.result_extractors import extract_hunt_plan
 
 
 async def plan_hunt(
@@ -277,11 +279,53 @@ async def plan_hunt(
             msgs=messages, **(msg_preprocess_kwargs or {})
         )
 
+    # Grounding revision round (fork fix, finding 10): run the deterministic
+    # checks on the first plan; if it cites undiscovered indices or non-
+    # executable SPL, feed the specific violations back as a user message and
+    # run the team once more. The RoundRobin team starts at the planner, so
+    # the planner sees the violations and revises before the critic speaks.
+    # One round only: the checks are advisory at 7B (the planner may still
+    # violate), and the CLI-level GROUNDING warning remains the final gate.
     try:
         if verbose:
             result = await Console(team.run_stream(task=messages), output_stats=True)
         else:
             result = await team.run(task=messages)
+
+        # Deterministic grounding check on the first plan.
+        first_plan = extract_hunt_plan(result)
+        report = check_plan_grounding(first_plan, data_discovery or "")
+        if not report.ok:
+            violations = []
+            if report.undiscovered_indices:
+                violations.append(
+                    "Indices cited but not in the data discovery report: "
+                    + ", ".join(report.undiscovered_indices)
+                )
+            for query in report.suspicious_queries:
+                violations.append(f"Not executable as written: {query}")
+            revision_feedback = (
+                "GROUNDING REVISION REQUIRED. Your plan violates the grounding rules: "
+                + " | ".join(violations)
+                + " Revise the plan: use only indices from the data discovery "
+                "information, and make every query executable SPL as-is. If required "
+                "data is genuinely absent, replace the affected query with an explicit "
+                "data-gap statement in the plan's Data section."
+            )
+            if verbose:
+                print(
+                    "Grounding violations detected — requesting one revision round:\n"
+                    "  " + "\n  ".join(violations)
+                )
+            revision_messages = messages + [
+                TextMessage(content=revision_feedback, source="user")
+            ]
+            if verbose:
+                result = await Console(
+                    team.run_stream(task=revision_messages), output_stats=True
+                )
+            else:
+                result = await team.run(task=revision_messages)
 
         # Postprocess the result
         if msg_postprocess_callback:
