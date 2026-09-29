@@ -41,6 +41,32 @@ AGENT_EXTRACTION_CONFIG = {
 }
 
 
+# Sentinel strings every stage's terminator condition scans for. An agent that
+# echoes one of these inside its *content* (observed live: the discovery agent
+# quoting its own instruction "respond with YYY-TERMINATE-YYY" inside the report
+# body) poisons the next stage's input: TextMentionTermination scans every
+# message, including the user-role messages a stage's output becomes, so the
+# downstream team terminated on its first input before its agent ever spoke.
+# All known sentinels are stripped from every extracted result.
+TERMINATOR_SENTINELS = (
+    "YYY-TERMINATE-YYY",
+    "YYY-HYPOTHESIS-ACCEPTED-YYY",
+)
+
+
+def strip_terminator_sentinels(text: str) -> str:
+    """Remove terminator sentinel strings from stage-output text.
+
+    Stage outputs feed the next stage as user-role messages; a sentinel echoed
+    in agent content would otherwise trigger the downstream
+    TextMentionTermination immediately, producing empty results
+    ("no plan was generated"). Applied centrally in extract_agent_result.
+    """
+    for sentinel in TERMINATOR_SENTINELS:
+        text = text.replace(sentinel, "")
+    return text
+
+
 def extract_agent_result(
     result: Union[TaskResult, str],
     agent_name: str
@@ -62,9 +88,9 @@ def extract_agent_result(
     Raises:
         ValueError: If agent_name is not recognized
     """
-    # If result is already a string, return it directly
+    # If result is already a string, strip sentinels and return it
     if isinstance(result, str):
-        return result
+        return strip_terminator_sentinels(result).strip()
     
     # Get extraction configuration
     if agent_name not in AGENT_EXTRACTION_CONFIG:
@@ -89,7 +115,12 @@ def extract_agent_result(
     # Clean up any termination markers
     for pattern in cleanup_patterns:
         extracted_content = extracted_content.replace(pattern, "")
-    
+
+    # Strip every known sentinel, not just this agent's own: an agent can echo
+    # another stage's sentinel (the live failure), and whatever leaves here
+    # becomes the next stage's input.
+    extracted_content = strip_terminator_sentinels(extracted_content)
+
     return extracted_content.strip()
 
 
