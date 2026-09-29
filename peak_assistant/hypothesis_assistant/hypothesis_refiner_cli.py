@@ -40,6 +40,7 @@ from autogen_core import CancellationToken
 from autogen_core.tools import ToolResult, ToolSchema, Workbench
 
 from ..utils import find_dotenv_file
+from ..utils.cli_inputs import load_cli_content
 from ..utils.llm_factory import get_model_client
 from ..utils.agent_callbacks import (
     preprocess_messages_logging,
@@ -481,7 +482,7 @@ def main() -> None:
     parser.add_argument(
         "-c",
         "--local_context",
-        help="Path to the local context file (additional context to consider)",
+        help="Path to the local context file (additional context to consider), or the context text itself if not a path",
         required=False,
         default=None,
     )
@@ -562,17 +563,7 @@ def main() -> None:
             exit(1)
 
     # Read the contents of the local context if provided
-    local_context = None
-    if args.local_context:
-        try:
-            with open(args.local_context, "r", encoding="utf-8") as file:
-                local_context = file.read()
-        except FileNotFoundError:
-            print(f"Error: Local context file '{args.local_context}' not found")
-            exit(1)
-        except Exception as e:
-            print(f"Error reading local context: {e}")
-            exit(1)
+    local_context = load_cli_content(args.local_context, "Local context")
 
     messages: List[TextMessage] = list()
     current_hypothesis = args.hypothesis

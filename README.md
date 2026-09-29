@@ -244,6 +244,15 @@ We strongly recommend you also include at least some basic information about you
 Splunk indices, sourcetypes, and fields. This will help the AI agents understand your data better
 and generate more accurate queries. It's not required, because the automated data discovery is actually pretty good, but it can be helpful.
 
+### File paths or inline values
+
+The context-bearing CLI flags (`-a`/`--able_info`, `-c`/`--local_context`, and
+`-d`/`--data_discovery` on the planning assistant) accept either form: if the
+value names an existing file, its contents are loaded; otherwise the value is
+used as the content itself. A value that looks like a file path (contains a
+path separator or a document extension such as `.md`) but does not exist is
+reported as an error rather than silently treated as inline text.
+
 ## Model Configuration
 
 The PEAK Assistant requires a `model_config.json` file to configure LLM providers and models. This file must be placed in the repository root (the directory from which you run the application).

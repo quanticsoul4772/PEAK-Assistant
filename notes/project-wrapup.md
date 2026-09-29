@@ -23,7 +23,7 @@ zero pushes, PRs, or issues to `Cisco-Talos/PEAK-Assistant`; all work in the
 |---|---|---|
 | 1 | PEAK's env merge (`os.environ.copy()` + `update`) leaks parent-shell credentials into every spawned MCP server; parallax's key-presence features activated (`voyage-4` embedding call in the M2 run) | RESOLVED twice: empty-string scrub demonstrated strict-keyless (config-only); general fix designed as `null`-key removal (`env-merge-design-note.md`, Option B recommended) |
 | 2 | parallax routing log printed `source=ANTHROPIC_MODEL` on `openai_compat` | RESOLVED — parallax PR #109 (`DefaultVar`), all 8 CI checks green, live-verified `source=OPENAI_MODEL` |
-| 3 | PEAK CLI `-a`/`-c` are file paths despite help text implying inline values | Documented (`m2-demo-evidence.md`); the only open divergence; low priority |
+| 3 | PEAK CLI `-a`/`-c` are file paths despite help text implying inline values | RESOLVED (fork) in both directions: PR `8b88d81` aligned help text to "Path to ..." across all 6 CLIs (pinned by `test_cli_help_path_parity.py`), then the hybrid loader (`peak_assistant/utils/cli_inputs.py`) made every affected flag accept inline content too — existing file paths read as before, path-shaped-but-missing values still fail loudly, plain text passes through as content. Help text documents both forms |
 | 4 | Positive: qwen2.5:7b held the full agent+critic loop (real tool call, coherent report, clean `YYY-TERMINATE-YYY`), and in M4 chose the contract-correct tool (`verify` over `grounded_verify`) | Recorded as evidence for the heterogeneous-verification argument |
 | 5 | parallax `cost.usd` on local models looked like real spend (Opus-tier fallback pricing) | RESOLVED by decision + PR #110: zeroing declined (endpoint, not backend, decides "free"; cost is observability-only); `cost.estimated` added to the log line, live-verified both success and cancel paths |
 | 6 | Small models need steering to use verification tools (unsteered 7B critic never called) | Documented in `m4-live-validation.md`; a prompting concern, not a wiring one |
@@ -112,7 +112,8 @@ gated on that explicit decision.
 
 ## 5. Open items (all optional, none blocking)
 
-1. PEAK CLI `-a`/`-c` file-path quirk (divergence 3).
+1. ~~PEAK CLI `-a`/`-c` file-path quirk (divergence 3).~~ RESOLVED — hybrid
+   file-or-inline flags (see divergence 3 in §2).
 2. `inheritEnvironment` / null-key removal implementation (design recorded;
    first-PR scope in `env-merge-design-note.md` section 4).
 3. Small-model sampling variance: tool usage in M2/M4 runs is not deterministic
