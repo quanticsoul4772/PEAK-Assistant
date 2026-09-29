@@ -1,7 +1,7 @@
 # Project wrap-up — PEAK × mcp-parallax integration research
 
 Date: 2026-09-27 (single-day arc, M0 through wrap-up). Final states: PEAK fork
-`main` at `3d063ef`; parallax fork `main` at `2709859`. Policy held throughout:
+`main` at `663ea46` (PRs #9–#35 merged); parallax fork `main` at `2709859`. Policy held throughout:
 zero pushes, PRs, or issues to `Cisco-Talos/PEAK-Assistant`; all work in the
 `quanticsoul4772` forks.
 
@@ -32,7 +32,7 @@ zero pushes, PRs, or issues to `Cisco-Talos/PEAK-Assistant`; all work in the
 
 | 9 | Data discovery fails open when the `data_discovery` group has no search-capable tools: the prompt orders the agent to inspect real Splunk events, the instruction is impossible, and the agent fabricates a plausible index inventory (observed live: `security-alt.Event`, `security_event`, later `powerhell`) that planning quotes back as ground truth | RESOLVED in two layers — PEAK PR #26 (`fac146d`): deterministic `UNVERIFIED` pre-flight warning naming every tool seen + prompt guardrail (unobserved names must be labeled hypotheses); PEAK PR #27 (`807ba50`): shipped `mcp_servers.json.example` wiring the real Splunk MCP server (`splunk/splunk-mcp-server2`) so discovery is search-capable by default. **Grounded validation 2026-09-28:** against a live Splunk 10.4.3 trial container via that server, the warning stays silent, the agent executes a real `get_indexes` round-trip (13 indices), and the report cites the container's actual indices (`index=main`, `index=_audit`) — the fabricated-name class is eliminated when search exists, and made loud when it does not. Verbatim transcripts: `discovery-ungrounded-parallax.log`, `discovery-grounded-splunk.log` |
 
-| 10 | Planning ignores its grounding: on the grounded-Splunk H1 run, the plan cited indices discovery had reported absent (`netflow`, `audit`, `security`, `endpoint`) and generated invalid SPL (`tstats count ... FROM_UNIXTIME(_time) ... WHERE` — not valid Splunk syntax); the plan critic, instructed to check SPL correctness, approved it anyway. 1 of 6 plan queries executed; 0 events on the valid one | Documented 2026-09-29; partial mitigations exist (sentinel fix PEAK PR #30 removes the correlated empty-plan failure; discovery grounding already limits invention upstream) but planner grounding is an open work item |
+| 10 | Planning ignores its grounding: on the grounded-Splunk H1 run, the plan cited indices discovery had reported absent (`netflow`, `audit`, `security`, `endpoint`) and generated invalid SPL (`tstats count ... FROM_UNIXTIME(_time) ... WHERE` — not valid Splunk syntax); the plan critic, instructed to check SPL correctness, approved it anyway. 1 of 6 plan queries executed; 0 events on the valid one | RESOLVED as a four-layer enforcement chain (2026-09-29), each layer live-verified against 7B planners: PEAK PR #32 (`plan_grounding.py` deterministic checks + GROUNDING RULES in the plan prompt); PR #33 — non-blocking GROUNDING WARNING after plan generation; PR #34 — one critic-driven revision round before the warning surfaces; PR #35 — hard `exit(1)` on ungrounded plans unless `--allow-ungrounded-plan` is passed. Detection ran 3/3 with zero false alarms (`plan-h1c/h1d/h1e.log`); both qwen2.5:7b and llama3.1:8b fabricated indices every run even with the revision round, so enforcement lives in code at small-model scale — the same experiment rejected bigger-model mitigation. Fork `main` carries the chain at `663ea46` |
 
 Carried-over items that predate this arc and remain open: `is_capability_rejection`
 broad-token risk; rustls 0.23.43 version cap unexplained; live smoke inherits the
@@ -102,8 +102,9 @@ gated on that explicit decision.
 - **parallax** (`2709859`): two backends (anthropic, openai_compat), keyless
   custom endpoints, a routing table that names its sources, self-describing cost telemetry — 538
   lib + 24 config_facts + 72 integration tests, all gates clean.
-- **PEAK fork** (`3d063ef`): M4 opt-in verification wiring (one group, one
+- **PEAK fork** (`663ea46`, PRs #9–#35 merged): M4 opt-in verification wiring (one group, one
   agent, two tools) with T1–T6 mocked tests, README guidance, live validation;
+  discovery-grounding and planner-grounding enforcement (PRs #26, #30, #32–#35);
   a research-notes workspace documenting every decision and every transcript.
 - **Reproducibility**: the M2/M4 demos rerun from a clean checkout with only
   `mcp_servers.json` (+ local Ollama); strict-keyless variant makes zero
