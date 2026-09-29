@@ -51,6 +51,25 @@ def test_extracts_queries_from_spl_and_splunk_fences() -> None:
     assert queries[0] == "index=winrm_hunt | stats count"
 
 
+def test_fence_tags_match_case_insensitively() -> None:
+    """Regression: models emit case-variant fences (llama3.1:8b wrote 24
+    blocks as ```sPL in a 5-run head-to-head); extraction must not miss
+    them. Content rules are unchanged.
+    """
+    plan = (
+        "```sPL\nindex=winrm_hunt | stats count\n```\n"
+        "prose\n"
+        "```SPL\nindex=winrm_hunt | head 10\n```\n"
+        "```Spl\nindex=winrm_hunt | stats count by host\n```"
+    )
+    queries = extract_spl_queries(plan)
+    assert len(queries) == 3
+    assert all("index=winrm_hunt" in q for q in queries)
+
+    # The extracted queries still flow through the deterministic checks.
+    assert check_plan_indices(plan, DISCOVERY) == []
+
+
 def test_undiscovered_index_is_flagged() -> None:
     plan = "```spl\nindex=netflow | stats count\n```"
     assert check_plan_indices(plan, DISCOVERY) == ["netflow"]

@@ -44,7 +44,11 @@ import re
 from dataclasses import dataclass, field
 from typing import List
 
-_FENCED_BLOCK = re.compile(r"```(?:spl|splunk)?[ \t]*\r?\n(.*?)```", re.S)
+# Fence language tags are case-insensitive: models emit ```SPL/```Spl as
+# readily as ```spl (observed: llama3.1:8b wrote 24 blocks as ```sPL in a
+# 5-run head-to-head). The fence opener/closer must match case-insensitively
+# or those queries are missed entirely.
+_FENCED_BLOCK = re.compile(r"```(?:spl|splunk)?[ \t]*\r?\n(.*?)```", re.I | re.S)
 _INDEX_TOKEN = re.compile(r"\bindex=([A-Za-z0-9_.\-]+)")
 # Placeholder time predicates: "WHERE _time > earliest", "_time > earliest",
 # "WHERE _time > <...>" style pseudocode.
