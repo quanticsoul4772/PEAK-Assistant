@@ -79,6 +79,12 @@ local state; local branches may be behind their remotes.
     the do-not-zero cost-accounting rationale. Updated 2026-09-28: also records
     PR #112 — `endpoint=` on every routing line, closing the "reads vendor-bound"
     naming trap (ledger finding 8).
+15. `discovery-ungrounded-parallax.log` / `discovery-grounded-splunk.log` —
+    verbatim before/after pair for ledger finding 9 (2026-09-28): data
+    discovery with no search-capable tools (warning firing, fabricated index
+    names) vs the same phase grounded through the Splunk MCP server against a
+    live trial container (real `get_indexes`, real indices in the report).
+    Dispositions in `project-wrapup.md` row 9 and `m2-demo-evidence.md` §3b.
 11. `m2-keyless-rerun-transcript.log` — verbatim transcript of the
     strict-keyless M2 rerun (empty-string env scrub, zero external calls).
 12. `env-merge-design-note.md` — PEAK-side design proposal (2026-09-27):
