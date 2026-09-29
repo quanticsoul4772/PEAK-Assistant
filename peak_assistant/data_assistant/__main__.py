@@ -32,6 +32,7 @@ from autogen_agentchat.messages import TextMessage
 
 from . import identify_data_sources
 from ..utils import find_dotenv_file
+from ..utils.cli_inputs import load_cli_content
 from ..utils.agent_callbacks import (
     preprocess_messages_logging,
     postprocess_messages_logging,
@@ -57,7 +58,7 @@ def main() -> None:
     parser.add_argument(
         "-a",
         "--able_info",
-        help="Path to the ABLE information file (Actor, Behavior, Location, Evidence)",
+        help="Path to the ABLE information file (Actor, Behavior, Location, Evidence), or the ABLE text itself if not a path",
         required=False,
         default=None,
     )
@@ -71,7 +72,7 @@ def main() -> None:
     parser.add_argument(
         "-c",
         "--local_context",
-        help="Path to the local context file (additional context to consider)",
+        help="Path to the local context file (additional context to consider), or the context text itself if not a path",
         required=False,
         default=None,
     )
@@ -121,18 +122,9 @@ def main() -> None:
         print(f"Error reading research document: {e}")
         exit(1)
 
-    # Read the contents of the ABLE information if provided
-    able_info = ""
-    if args.able_info:
-        try:
-            with open(args.able_info, "r", encoding="utf-8") as file:
-                able_info = file.read()
-        except FileNotFoundError:
-            print(f"Error: ABLE information file '{args.able_info}' not found")
-            exit(1)
-        except Exception as e:
-            print(f"Error reading ABLE information: {e}")
-            exit(1)
+    # Read the contents of the ABLE information if provided (file path or
+    # inline value; a path-shaped value that does not exist is an error)
+    able_info = load_cli_content(args.able_info, "ABLE information") or ""
 
     # Read the contents of the local data document if provided
     local_data = ""
@@ -147,18 +139,9 @@ def main() -> None:
             print(f"Error reading local data document: {e}")
             exit(1)
 
-    # Read the contents of the local context if provided
-    local_context = ""
-    if args.local_context:
-        try:
-            with open(args.local_context, "r", encoding="utf-8") as file:
-                local_context = file.read()
-        except FileNotFoundError:
-            print(f"Error: Local context file '{args.local_context}' not found")
-            exit(1)
-        except Exception as e:
-            print(f"Error reading local context: {e}")
-            exit(1)
+    # Read the contents of the local context if provided (file path or
+    # inline value; a path-shaped value that does not exist is an error)
+    local_context = load_cli_content(args.local_context, "Local context") or ""
 
     messages: List[TextMessage] = list()
     debug_agents_opts: dict[str, Any] = dict()
