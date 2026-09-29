@@ -194,3 +194,6 @@ reports/
 !MODEL_CONFIGURATION.md
 !CUSTOM_AUTHENTICATION.md
 !model_config.json.example
+# research-notes workspace: every markdown file under notes/ is tracked
+# (established pattern; previously each needed `git add -f`)
+!notes/*.md
