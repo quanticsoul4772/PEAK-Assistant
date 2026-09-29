@@ -119,6 +119,15 @@ def print_server_status(server_name: str, server_config, verbose: bool = False):
                 print(f"  Args: {' '.join(server_config.args)}")
             else:
                 print("  Args: None")
+            
+            # Configured env keys: strings are set; null values remove the
+            # key from the spawned server's environment.
+            if server_config.env:
+                removed_keys = sorted(k for k, v in server_config.env.items() if v is None)
+                set_keys = sorted(k for k, v in server_config.env.items() if v is not None)
+                print(f"  Env overrides: {', '.join(set_keys) if set_keys else 'None'}")
+                if removed_keys:
+                    print(f"  Env removed (inherited keys stripped): {', '.join('-' + k for k in removed_keys)}")
         elif server_config.transport.value in ["http", "sse"]:
             print(f"  URL: {server_config.url}")
             if server_config.auth and hasattr(server_config.auth, 'discovery_url') and server_config.auth.discovery_url:
