@@ -130,6 +130,12 @@ observations. With `splunk-mcp` connected (tools such as `search_oneshot`,
 Secrets are supplied via environment-variable interpolation (`${VAR}`),
 never stored in the file.
 
+The same grounding guarantee extends to hunt plans: after generation, the
+planning stage checks every plan against the data discovery report and fails
+with a `GROUNDING ERROR` if the plan cites indices absent from the report or
+contains non-executable SPL. Pass `--allow-ungrounded-plan` to downgrade this
+to a warning when you explicitly want to proceed with an unverified plan.
+
 ### Telling the Assistant Which MCP Servers to Use
 In addition to defining the servers, you'll also have to add them to the appropriate MCP server groups, to let the different agents know which they should be using. 
 

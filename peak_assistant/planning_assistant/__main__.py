@@ -97,6 +97,15 @@ def main() -> None:
         help="Skip user feedback and automatically accept the generated hunt plan"
     )
     parser.add_argument(
+        "--allow-ungrounded-plan",
+        action="store_true",
+        help=(
+            "Accept a hunt plan even when grounding checks fail (indices not in "
+            "the discovery report, non-executable SPL). Without this flag a "
+            "plan that fails grounding checks is a hard error."
+        )
+    )
+    parser.add_argument(
         "--debug-agents",
         action="store_true",
         help="Enable agent debug logging to msgs.txt and results.txt"
@@ -214,21 +223,42 @@ def main() -> None:
 
         # Deterministic grounding check (fork fix, finding 10): flag indices
         # the plan cites that the discovery report never mentions, and plan
-        # queries that violate the pinned executable-SPL rules. The warning
-        # does not block the plan; it makes unverifiable grounding loud.
+        # queries that violate the pinned executable-SPL rules. Default is a
+        # hard error — the tool refuses to hand the hunter fabricated data
+        # sources; --allow-ungrounded-plan downgrades it to a warning.
         grounding_report = check_plan_grounding(hunt_plan, data_discovery or "")
         if not grounding_report.ok:
-            print(
-                "GROUNDING WARNING: the plan references data not present in the "
-                "data discovery report — treat affected queries as unverified."
-            )
+            violations = []
             if grounding_report.undiscovered_indices:
-                print(
-                    "  Indices cited but not in the discovery report: "
+                violations.append(
+                    "Indices cited but not in the discovery report: "
                     + ", ".join(grounding_report.undiscovered_indices)
                 )
             for query in grounding_report.suspicious_queries:
-                print(f"  Not executable as written: {query[:160]}")
+                violations.append(f"Not executable as written: {query[:160]}")
+
+            if args.allow_ungrounded_plan:
+                print(
+                    "GROUNDING WARNING: the plan references data not present in the "
+                    "data discovery report — treat affected queries as unverified."
+                )
+                for violation in violations:
+                    print(f"  {violation}")
+            else:
+                print(
+                    "GROUNDING ERROR: the plan references data not present in the "
+                    "data discovery report, so the hunt would run against "
+                    "unverified or fabricated data sources. Refusing to accept "
+                    "the plan.",
+                )
+                for violation in violations:
+                    print(f"  {violation}")
+                print(
+                    "Re-run with a data discovery report that covers the required "
+                    "indices, or pass --allow-ungrounded-plan to accept the plan "
+                    "anyway."
+                )
+                exit(1)
 
         print(f"Hunt plan:\n{'*' * 50}\n{hunt_plan}\n{'*' * 50}")
         
