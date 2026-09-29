@@ -191,6 +191,31 @@ Carried-over issues unrelated to the backend swap: `previous_run` tool-role bug 
 in fork PR #9), `is_capability_rejection` broad-token risk, rustls 0.23.43 version cap
 unexplained, live smoke inherits the 2s `test_config` timeout (latent flake).
 
+## 3b. Finding 9 (2026-09-28): discovery fails open without search tools
+
+During the H1/H5 hunt comparison, plans referenced indices (`security-alt.Event`,
+`security_event`, later `powerhell`) that exist in no real deployment. Root cause is
+not planning (it copies its `-d` input faithfully) but discovery: the prompt demands
+inspection of real Splunk events while the `data_discovery` group exposed only
+parallax's corrective-memory tools, so the agent invented an inventory and failed
+open, silently.
+
+Remediation (both merged): PEAK PR #26 adds a deterministic pre-flight —
+`WARNING: no search-capable tools ...` naming every tool seen — plus a prompt
+guardrail requiring unobserved names to be labeled as hypotheses. PEAK PR #27 ships
+`mcp_servers.json.example` with the Splunk MCP server (`splunk/splunk-mcp-server2`)
+in `data_discovery`, making the group search-capable by default.
+
+Grounded validation against a live Splunk 10.4.3 trial container: the warning is
+silent, the agent performs a real `get_indexes` call (13 indices returned), and the
+report cites the container's actual indices (`index=main`, `index=_audit`) in
+executable SPL. Fabrication is eliminated when search exists and made loud when it
+does not. One soft limit remains at 7B: with no search tools, the guardrail reduces
+but does not stop fabrication — the model still produces an (unlabeled) inventory.
+The durable fix is the second one: a search-capable group. Verbatim transcripts:
+`discovery-ungrounded-parallax.log` (warning firing) and
+`discovery-grounded-splunk.log` (real `get_indexes` round-trip).
+
 ## 4. Exit-criteria mapping
 
 > Exit criteria: reproducible demo on a clean PEAK checkout with only
