@@ -35,6 +35,8 @@ from __future__ import annotations
 
 import io
 import os
+
+import pytest
 import tempfile
 from contextlib import redirect_stdout
 from unittest.mock import patch
@@ -68,7 +70,9 @@ def _write_tmp(name: str, content: str) -> str:
     return path
 
 
-def _run_cli(monkeypatch, plan: str, discovery_path: str) -> str:
+def _run_cli(
+    monkeypatch, plan: str, discovery_path: str, extra_argv: list[str] | None = None
+) -> str:
     """Run planning main() with the agent team mocked; return captured stdout."""
     research_path = _write_tmp("research.md", "research body")
 
@@ -80,7 +84,7 @@ def _run_cli(monkeypatch, plan: str, discovery_path: str) -> str:
             "-r", research_path,
             "-d", discovery_path,
             "--no-feedback",
-        ],
+        ] + (extra_argv or []),
     )
 
     # Mock the agent team: plan_hunt returns a TaskResult stand-in whose
@@ -113,15 +117,51 @@ def test_grounding_warning_printed_for_undiscovered_index_and_bad_spl(
     monkeypatch,
 ) -> None:
     discovery_path = _write_tmp("discovery-bad.md", DISCOVERY)
-    out = _run_cli(monkeypatch, UNGROUNDED_PLAN, discovery_path)
+    out = _run_cli(
+        monkeypatch, UNGROUNDED_PLAN, discovery_path, ["--allow-ungrounded-plan"]
+    )
     assert "GROUNDING WARNING" in out
     assert "netflow" in out
     assert "Not executable as written" in out
     assert "FROM_UNIXTIME" in out
 
 
+def test_hard_error_by_default_for_ungrounded_plan(monkeypatch) -> None:
+    """Without --allow-ungrounded-plan, an ungrounded plan is a hard error."""
+    discovery_path = _write_tmp("discovery-hard.md", DISCOVERY)
+    with pytest.raises(SystemExit) as excinfo:
+        _run_cli(monkeypatch, UNGROUNDED_PLAN, discovery_path)
+    assert excinfo.value.code == 1
+
+
+def test_hard_error_lists_violations_and_remedies(monkeypatch, capsys) -> None:
+    """The error names the violations and both remedies."""
+    discovery_path = _write_tmp("discovery-hard2.md", DISCOVERY)
+    with pytest.raises(SystemExit):
+        _run_cli(monkeypatch, UNGROUNDED_PLAN, discovery_path)
+    # main() prints via print(); capture from the same run is already flushed.
+    # Re-run capturing stdout to assert message content.
+    captured: dict = {}
+    import builtins
+
+    real_print = builtins.print
+
+    def fake_print(*args, **kwargs):
+        captured.setdefault("lines", []).append(" ".join(str(a) for a in args))
+        real_print(*args, **kwargs)
+
+    monkeypatch.setattr(builtins, "print", fake_print)
+    with pytest.raises(SystemExit):
+        _run_cli(monkeypatch, UNGROUNDED_PLAN, discovery_path)
+    lines = chr(10).join(captured.get("lines", []))
+    assert "GROUNDING ERROR" in lines
+    assert "netflow" in lines
+    assert "--allow-ungrounded-plan" in lines
+
+
 def test_no_warning_for_grounded_plan(monkeypatch) -> None:
     discovery_path = _write_tmp("discovery-good.md", DISCOVERY)
     out = _run_cli(monkeypatch, GROUNDED_PLAN, discovery_path)
     assert "GROUNDING WARNING" not in out
+    assert "GROUNDING ERROR" not in out
     assert "Hunt plan:" in out
