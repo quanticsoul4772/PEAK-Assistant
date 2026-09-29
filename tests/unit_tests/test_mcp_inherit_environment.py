@@ -194,3 +194,53 @@ def test_save_round_trips_flags(config_file, tmp_path) -> None:
     fresh = MCPConfigManager(str(path))
     assert fresh.get_server_config("strict").inherit_environment is False
     assert fresh.get_inherit_environment_default() is False
+
+
+def test_mcp_status_reflects_top_level_default(capsys, config_file) -> None:
+    """Regression: status must resolve the effective mode, not assume it.
+
+    A per-server None inherits the top-level inheritEnvironment default;
+    printing "full parent copy" for such a server when the top-level
+    default is false misreports the spawn-time behavior.
+    """
+    from peak_assistant.mcp_status.__main__ import print_server_status
+
+    # Top-level false, no per-server override -> effective mode is minimal.
+    path = config_file({
+        "inheritEnvironment": False,
+        "mcpServers": {"a": {"command": "python"}},
+    })
+    manager = MCPConfigManager(str(path))
+    cfg = manager.get_server_config("a")
+    print_server_status(
+        "a", cfg, verbose=True,
+        default_inherit_environment=manager.get_inherit_environment_default(),
+    )
+    out = capsys.readouterr().out
+    assert "minimal allowlist (inheritEnvironment=false)" in out
+    assert "full parent copy" not in out
+
+    # Per-server True overrides the top-level default -> full copy.
+    path = config_file({
+        "inheritEnvironment": False,
+        "mcpServers": {"b": {"command": "python", "inheritEnvironment": True}},
+    })
+    manager = MCPConfigManager(str(path))
+    cfg = manager.get_server_config("b")
+    print_server_status(
+        "b", cfg, verbose=True,
+        default_inherit_environment=manager.get_inherit_environment_default(),
+    )
+    out = capsys.readouterr().out
+    assert "full parent copy" in out
+
+    # No config anywhere -> full copy (historical default) still reported.
+    path = config_file({"mcpServers": {"c": {"command": "python"}}})
+    manager = MCPConfigManager(str(path))
+    cfg = manager.get_server_config("c")
+    print_server_status(
+        "c", cfg, verbose=True,
+        default_inherit_environment=manager.get_inherit_environment_default(),
+    )
+    out = capsys.readouterr().out
+    assert "full parent copy (default)" in out
