@@ -35,6 +35,7 @@ from ..utils.agent_callbacks import (
     preprocess_messages_logging,
     postprocess_messages_logging,
 )
+from ..utils.plan_grounding import check_plan_grounding
 from ..utils.result_extractors import extract_hunt_plan
 
 from . import plan_hunt
@@ -210,6 +211,24 @@ def main() -> None:
 
         # Extract hunt plan using the centralized extractor
         hunt_plan = extract_hunt_plan(data_sources)
+
+        # Deterministic grounding check (fork fix, finding 10): flag indices
+        # the plan cites that the discovery report never mentions, and plan
+        # queries that violate the pinned executable-SPL rules. The warning
+        # does not block the plan; it makes unverifiable grounding loud.
+        grounding_report = check_plan_grounding(hunt_plan, data_discovery or "")
+        if not grounding_report.ok:
+            print(
+                "GROUNDING WARNING: the plan references data not present in the "
+                "data discovery report — treat affected queries as unverified."
+            )
+            if grounding_report.undiscovered_indices:
+                print(
+                    "  Indices cited but not in the discovery report: "
+                    + ", ".join(grounding_report.undiscovered_indices)
+                )
+            for query in grounding_report.suspicious_queries:
+                print(f"  Not executable as written: {query[:160]}")
 
         print(f"Hunt plan:\n{'*' * 50}\n{hunt_plan}\n{'*' * 50}")
         
