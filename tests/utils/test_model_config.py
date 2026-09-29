@@ -238,6 +238,142 @@ def test_resolve_defaults(temp_config_file, monkeypatch):
 def test_resolve_agent_exact_match(temp_config_file, monkeypatch):
     """Test resolving configuration with exact agent match."""
     monkeypatch.setenv("API_KEY", "key")
+
+
+def _base_config(temp_config_file, **agent_overrides):
+    """Create a minimal two-provider config for merge-behavior tests."""
+    config = {
+        "version": "1",
+        "providers": {
+            "azure-main": {
+                "type": "azure",
+                "config": {
+                    "endpoint": "https://example.azure.openai.com/",
+                    "api_key": "${API_KEY}",
+                    "api_version": "2025-04-01-preview"
+                }
+            },
+            "ollama-local": {
+                "type": "openai",
+                "config": {
+                    "api_key": "${API_KEY}",
+                    "base_url": "http://localhost:11434/v1"
+                }
+            }
+        },
+        "defaults": {
+            "provider": "azure-main",
+            "model": "default-model",
+            "deployment": "default-deployment"
+        }
+    }
+    config.update(agent_overrides)
+    return temp_config_file(config)
+
+
+def test_empty_agent_entry_uses_defaults(temp_config_file, monkeypatch):
+    """Regression: an empty agent entry must layer over defaults, not shadow them.
+
+    Live-planner incident (2026-09-29): ``"agents": {"hunt_planner": {}}``
+    replaced the resolved config wholesale, so defaults never applied and the
+    factory failed with ``No 'provider' field found for agent 'hunt_planner'``.
+    """
+    monkeypatch.setenv("API_KEY", "key")
+    config_file = _base_config(temp_config_file, agents={"hunt_planner": {}})
+
+    loader = ModelConfigLoader(config_file)
+    loader.load()
+
+    config = loader.resolve_agent_config("hunt_planner")
+    assert config["provider"] == "azure-main"
+    assert config["model"] == "default-model"
+    assert config["deployment"] == "default-deployment"
+
+
+def test_agent_entry_merges_over_defaults(temp_config_file, monkeypatch):
+    """A non-empty agent entry overrides only the keys it sets."""
+    monkeypatch.setenv("API_KEY", "key")
+    config_file = _base_config(
+        temp_config_file,
+        agents={"special_agent": {"provider": "ollama-local", "model": "llama-3.1-8b"}},
+    )
+
+
+    loader = ModelConfigLoader(config_file)
+    loader.load()
+
+    config = loader.resolve_agent_config("special_agent")
+    assert config["provider"] == "ollama-local"
+    assert config["model"] == "llama-3.1-8b"
+    # Unset key still inherited from defaults
+    assert config["deployment"] == "default-deployment"
+
+
+def test_empty_group_entry_layers_over_defaults(temp_config_file, monkeypatch):
+    """A first-matching group with an empty config still inherits defaults."""
+    monkeypatch.setenv("API_KEY", "key")
+    config_file = _base_config(
+        temp_config_file,
+        groups={"grp": {"match": ["critic_*"]}},
+    )
+
+    loader = ModelConfigLoader(config_file)
+    loader.load()
+
+    config = loader.resolve_agent_config("critic_one")
+    assert config["provider"] == "azure-main"
+    assert config["model"] == "default-model"
+
+
+def test_agent_match_skips_group_and_layers_over_defaults(temp_config_file, monkeypatch):
+    """Exact agent match keeps precedence over groups but layers over defaults."""
+    monkeypatch.setenv("API_KEY", "key")
+    config_file = _base_config(
+        temp_config_file,
+        groups={
+            "grp": {
+                "match": ["critic_*"],
+                "model": "group-model",
+            }
+        },
+        agents={"critic_one": {"deployment": "agent-deployment"}},
+    )
+
+    loader = ModelConfigLoader(config_file)
+    loader.load()
+
+    config = loader.resolve_agent_config("critic_one")
+    assert config["provider"] == "azure-main"  # from defaults
+    assert config["model"] == "default-model"  # agent match wins whole layer; group ignored
+    assert config["deployment"] == "agent-deployment"  # from agent
+
+    # Without the agent entry, the group match supplies model over defaults.
+    config_file = _base_config(
+        temp_config_file,
+        groups={
+            "grp": {
+                "match": ["critic_*"],
+                "model": "group-model",
+            }
+        },
+    )
+    loader = ModelConfigLoader(config_file)
+    loader.load()
+    config = loader.resolve_agent_config("critic_one")
+    assert config["model"] == "group-model"
+    assert config["deployment"] == "default-deployment"
+
+
+def test_agent_entry_must_be_object(temp_config_file, monkeypatch):
+    """A non-object agent entry is a clear configuration error."""
+    monkeypatch.setenv("API_KEY", "key")
+    config_file = _base_config(temp_config_file, agents={"bad_agent": "nope"})
+
+    loader = ModelConfigLoader(config_file)
+    loader.load()
+
+    with pytest.raises(ModelConfigError, match="must be a JSON object"):
+        loader.resolve_agent_config("bad_agent")
     
     config_file = temp_config_file({
         "version": "1",

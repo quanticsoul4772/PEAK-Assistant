@@ -119,10 +119,14 @@ class ModelConfigLoader:
     def resolve_agent_config(self, agent_name: Optional[str] = None) -> Dict[str, Any]:
         """Resolve configuration for a specific agent.
         
-        Resolution order:
-        1. agents.<agent_name> (exact match)
-        2. First matching group in groups.* (wildcard match)
-        3. defaults
+        Resolution order (layered merge, later layers win per key):
+        1. defaults
+        2. First matching group in groups.* (wildcard match) layers over defaults
+        3. agents.<agent_name> (exact match) layers over both
+
+        An agent or group entry only overrides the keys it sets; unset keys
+        inherit from defaults, so an empty (``{}``) entry is valid and simply
+        uses the defaults.
         
         Args:
             agent_name: Name of the agent. If None, uses defaults.
@@ -144,9 +148,15 @@ class ModelConfigLoader:
         agent_config = None
         
         # 1. Check for exact agent match
+        # The agent entry layers over defaults (it may override any subset of
+        # keys, including being empty) instead of replacing them wholesale.
         if agent_name and "agents" in self._config:
             agents = self._config["agents"]
             if agent_name in agents:
+                if not isinstance(agents[agent_name], dict):
+                    raise ModelConfigError(
+                        f"Agent '{agent_name}' config must be a JSON object"
+                    )
                 agent_config = agents[agent_name].copy()
         
         # 2. Check for group match (first match wins)
@@ -165,12 +175,18 @@ class ModelConfigLoader:
                         agent_config = {k: v for k, v in group_config.items() if k != "match"}
                         break
                 
-                if agent_config:
+                # First matching group wins even if its config is empty.
+                if agent_config is not None:
                     break
         
-        # 3. Fall back to defaults
-        if agent_config is None:
-            agent_config = self._config["defaults"].copy()
+        # 3. Layer the matched config over defaults. An agent or group entry
+        # only overrides the keys it sets; everything else inherits from
+        # defaults, so an empty entry can never shadow defaults (which would
+        # otherwise fail later with a confusing "No 'provider' field" error).
+        merged = dict(self._config["defaults"])
+        if agent_config:
+            merged.update(agent_config)
+        agent_config = merged
         
         # Validate that we have a provider reference
         if "provider" not in agent_config:
