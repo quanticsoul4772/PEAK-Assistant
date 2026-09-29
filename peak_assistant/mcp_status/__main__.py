@@ -87,7 +87,7 @@ def check_auth_status(server_config) -> Tuple[str, List[str], List[str]]:
     return ("ready", [], [])
 
 
-def print_server_status(server_name: str, server_config, verbose: bool = False):
+def print_server_status(server_name: str, server_config, verbose: bool = False, default_inherit_environment: bool = True):
     """Print status information for a single server"""
     status, configured_vars, missing_vars = check_auth_status(server_config)
     
@@ -130,10 +130,14 @@ def print_server_status(server_name: str, server_config, verbose: bool = False):
                     print(f"  Env removed (inherited keys stripped): {', '.join('-' + k for k in removed_keys)}")
             
             # Inheritance mode: false = SDK-style minimal allowlist base.
+            # A per-server None inherits the top-level default, so the
+            # effective mode is resolved here, not assumed.
             inherit = server_config.inherit_environment
+            if inherit is None:
+                inherit = default_inherit_environment
             if inherit is False:
                 print("  Environment: minimal allowlist (inheritEnvironment=false)")
-            elif inherit is None:
+            else:
                 print("  Environment: full parent copy (default)")
         elif server_config.transport.value in ["http", "sse"]:
             print(f"  URL: {server_config.url}")
@@ -274,7 +278,12 @@ def main():
                 else:
                     missing_count += 1
                 
-                print_server_status(server_name, server_config, args.verbose)
+                print_server_status(
+                    server_name,
+                    server_config,
+                    args.verbose,
+                    default_inherit_environment=config_manager.get_inherit_environment_default(),
+                )
                 print()
         
         print()
