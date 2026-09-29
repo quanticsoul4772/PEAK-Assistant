@@ -93,6 +93,23 @@ async def plan_hunt(
         relevant sourcetypes and the key fields that are most likely to contain the 
         data needed to test the hypothesis.
 
+        GROUNDING RULES for Splunk indices and SPL syntax (mandatory):
+        - ONLY use index names that appear in the data discovery information. Every index
+          you name must be traceable to that document. If the discovery information reports
+          an index as absent, or does not mention an index, do not use it in any query —
+          even if it sounds plausible or standard (e.g., "netflow", "audit", "endpoint").
+        - Never invent index, sourcetype, or field names. Field names must also come from
+          the data discovery information's key-fields lists.
+        - If the discovery information is missing an index your hunt seems to need, do not
+          silently substitute a different one: instead state the gap explicitly in the
+          plan's Data section ("required data not present in the discovered indices").
+        - SPL syntax constraints: the 'tstats' command does not support FROM_UNIXTIME, and
+          tstats aggregations over _time are limited to count/min/max/range/earliest/latest.
+          Every query you write must be executable SPL as-is: no placeholder values like
+          "earliest" or "latest" in place of real time-range arguments, no pseudocode,
+          and no "[rest of the query]" style elisions. Use "earliest=-24h latest=now" style
+          arguments when a time range is needed.
+
         Using all this information, create a comprehensive plan for the hunt that includes:
         - A restatement of the hypothesis. Call this section "Hypothesis".
         - An estimate of the applicable time window for the hunt. Many hunts may not have 
@@ -123,8 +140,11 @@ async def plan_hunt(
           search filters to limit the amount of data being searched, such as by specifying
           certain specific fields and values that must be present to make the events
           relevant. 
-        - Instead of using traditional queries, considuer using the SPL 'tstats' command
+        - Instead of using traditional queries, consider using the SPL 'tstats' command
           to search indexed data, as this is more efficient and faster than searching raw logs.
+        - Respect the GROUNDING RULES above in every query: they take precedence over
+          efficiency suggestions, and an executable query against a discovered index is
+          worth more than an efficient query against an index that does not exist.
 
         Respond with a Markdown document containing the detailed hunt plan.  Only return
         your plan in the response, do not include any other text. Do not offer
@@ -173,12 +193,20 @@ async def plan_hunt(
         Above all else, ensure that the plan and the analysis steps actually address
         the hunting hypothesis. 
 
-        Be sure to carefully check any Splunk SPL queries provided in the plan to ensure
-        that they are correct, efficient, and tailored to the data sources specified. Keep
+        Be sure to carefully check every Splunk SPL query provided in the plan. The planner
+        must obey the GROUNDING RULES from its instructions; treat any violation as a blocking
+        defect and require a fix, no matter how good the rest of the plan is:
+        - An index, sourcetype, or field name that does not appear in the data discovery
+          information is a fabrication (observed live: "netflow", "audit", "endpoint" cited
+          for a deployment where discovery reported them absent). Require removal or
+          replacement with a discovered index, or an explicit data-gap statement.
+        - A query that is not executable as-is is a fabrication too: placeholder time ranges
+          ("WHERE _time > earliest"), pseudocode, "[rest of the query]" elisions, or invalid
+          syntax such as FROM_UNIXTIME inside tstats. Require a rewritten, executable query.
+        Keep
         in mind that the Splunk indices may contain a very large amount of data, so
-        the queries should be as efficient as possible. Cross-reference the queries with the 
-        data discovery information to ensure that the queries are using the correct indices,
-        sourcetypes, and key fields. If the queries are not efficient or do not use
+        the queries should be as efficient as possible — but only after the queries are
+        grounded and executable. If the queries are not efficient or do not use
         the correct indices, sourcetypes, or key fields, provide specific feedback on how to
         improve them.
 
