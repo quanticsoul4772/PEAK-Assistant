@@ -149,6 +149,16 @@ The empty-string form (`"KEY": ""`) still works for servers that treat
 blank values as unset, but `null` is the explicit, server-independent way
 to keep a credential from reaching a child process.
 
+**Strict mode (`inheritEnvironment: false`):** by default spawned servers
+start from a copy of your full shell environment. Setting
+`inheritEnvironment: false` on a server (or at the top level of the config
+as a default for all servers) instead starts it from an SDK-style minimal
+allowlist — `PATH`, `PATHEXT`, `COMSPEC`, `SYSTEMROOT`, `TEMP`, and a few
+other system keys — with your `env` values applied on top. Credentials that
+live only in your shell then never reach the child process at all, without
+needing to enumerate every key to remove. `mcp-status -v` shows the active
+mode per server.
+
 The same grounding guarantee extends to hunt plans: after generation, the
 planning stage checks every plan against the data discovery report and fails
 with a `GROUNDING ERROR` if the plan cites indices absent from the report or

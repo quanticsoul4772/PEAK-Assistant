@@ -128,6 +128,13 @@ def print_server_status(server_name: str, server_config, verbose: bool = False):
                 print(f"  Env overrides: {', '.join(set_keys) if set_keys else 'None'}")
                 if removed_keys:
                     print(f"  Env removed (inherited keys stripped): {', '.join('-' + k for k in removed_keys)}")
+            
+            # Inheritance mode: false = SDK-style minimal allowlist base.
+            inherit = server_config.inherit_environment
+            if inherit is False:
+                print("  Environment: minimal allowlist (inheritEnvironment=false)")
+            elif inherit is None:
+                print("  Environment: full parent copy (default)")
         elif server_config.transport.value in ["http", "sse"]:
             print(f"  URL: {server_config.url}")
             if server_config.auth and hasattr(server_config.auth, 'discovery_url') and server_config.auth.discovery_url:

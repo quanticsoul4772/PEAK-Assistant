@@ -92,10 +92,83 @@ class MCPServerConfig:
     # Values are strings to set; a None value means "remove this key from the
     # child environment" (it is never passed to the spawned server).
     env: Optional[Dict[str, Optional[str]]] = None
+    # False: spawn with only the SDK-style minimal allowlist plus configured
+    # env values instead of the full parent environment. None/True: inherit
+    # the full parent environment (historical behavior).
+    inherit_environment: Optional[bool] = None
     url: Optional[str] = None
     auth: Optional[AuthConfig] = None
     description: Optional[str] = None
     timeout: int = 30
+
+
+# Keys inherited by a spawned stdio server when ``inheritEnvironment`` is
+# ``false`` — modeled on the MCP Python SDK's ``get_default_environment()``
+# minimal allowlist (Windows entries included unconditionally; missing keys
+# are simply absent from the child environment).
+MINIMAL_INHERITED_ENV_KEYS = (
+    "PATH",
+    "PATHEXT",
+    "COMSPEC",
+    "SYSTEMROOT",
+    "WINDIR",
+    "SYSTEMDRIVE",
+    "TEMP",
+    "TMP",
+    "USERPROFILE",
+    "HOMEDRIVE",
+    "HOMEPATH",
+    "HOME",
+)
+
+
+def _minimal_inherited_env(parent_env: Dict[str, str]) -> Dict[str, str]:
+    """Return the SDK-style allowlist subset of *parent_env*."""
+    lower_map = {k.upper(): (k, v) for k, v in parent_env.items()}
+    return {
+        key: lower_map[key][1]
+        for key in MINIMAL_INHERITED_ENV_KEYS
+        if key in lower_map
+    }
+
+
+def resolve_server_env(
+    parent_env: Any,
+    server_env: Optional[Dict[str, Optional[str]]],
+    inherit_environment: Optional[bool] = None,
+    default_inherit_environment: bool = True,
+) -> Dict[str, str]:
+    """Build a child-process environment per the server's inheritance mode.
+
+    Combines the inheritance decision with the two-pass merge from the
+    null-removal work (env-merge design note, fork fix):
+
+    - ``inherit_environment`` True (the default): start from the full parent
+      environment, then apply string overrides and strip null-marked keys.
+    - ``inherit_environment`` False: start from the SDK-style minimal
+      allowlist (:data:`MINIMAL_INHERITED_ENV_KEYS`), then apply the same
+      two-pass merge. Credentials that live only in the parent shell never
+      reach the child unless explicitly configured.
+
+    Args:
+        parent_env: The parent environment (e.g. ``os.environ`` snapshot).
+        server_env: The server's configured ``env`` mapping (values may be
+            ``None`` to request removal). ``None`` or empty means no changes.
+        inherit_environment: Per-server ``inheritEnvironment`` setting; ``None``
+            means "not configured".
+        default_inherit_environment: Top-level ``inheritEnvironment`` default
+            applied when the per-server setting is ``None``.
+
+    Returns:
+        A new dict; the input is never mutated.
+    """
+    inherit = (
+        default_inherit_environment
+        if inherit_environment is None
+        else inherit_environment
+    )
+    base = dict(parent_env) if inherit else _minimal_inherited_env(parent_env)
+    return merge_server_env(base, server_env)
 
 
 def merge_server_env(parent_env: Any, server_env: Optional[Dict[str, Optional[str]]]) -> Dict[str, str]:
@@ -586,6 +659,9 @@ class MCPConfigManager:
         self.oauth_managers: Dict[str, OAuth2TokenManager] = {}  # For client credentials
         self.user_session_manager = UserSessionManager()
         self._servers_needing_oauth_discovery: Dict[str, str] = {}  # server_name -> server_url
+        # Top-level inheritEnvironment default (True = full parent env copy,
+        # historical behavior; False = SDK-style minimal allowlist base).
+        self._inherit_environment_default = True
         
         self._load_config()
         
@@ -731,12 +807,19 @@ class MCPConfigManager:
                         logger.warning(f"Failed to schedule OAuth discovery for {name}: {e}")
                         auth_config = None
                 
+                inherit_environment = server_config.get("inheritEnvironment")
+                if inherit_environment is not None and not isinstance(inherit_environment, bool):
+                    raise ValueError(
+                        f"Server '{name}': inheritEnvironment must be a boolean"
+                    )
+                
                 self.servers[name] = MCPServerConfig(
                     name=name,
                     transport=transport,
                     command=server_config.get("command"),
                     args=server_config.get("args", []),
                     env=server_config.get("env", {}),
+                    inherit_environment=inherit_environment,
                     url=server_config.get("url"),
                     auth=auth_config,
                     description=server_config.get("description"),
@@ -749,6 +832,13 @@ class MCPConfigManager:
                 elif auth_config and auth_config.type == AuthType.OAUTH2_AUTHORIZATION_CODE:
                     # User-specific token managers will be created on-demand
                     pass
+            
+            # Top-level inheritance default (optional; default True keeps the
+            # historical full parent-environment copy)
+            top_inherit = config_data.get("inheritEnvironment", True)
+            if not isinstance(top_inherit, bool):
+                raise ValueError("Top-level 'inheritEnvironment' must be a boolean")
+            self._inherit_environment_default = top_inherit
             
             # Load server groups
             logger.info("[CONFIG DEBUG] Loading server groups from config...")
@@ -788,12 +878,25 @@ class MCPConfigManager:
         """Get all server groups with their server names"""
         return dict(self.server_groups)
 
+    def get_inherit_environment_default(self) -> bool:
+        """Return the top-level ``inheritEnvironment`` default.
+
+        True (the default) means spawned stdio servers inherit the full
+        parent environment; False means they start from the SDK-style
+        minimal allowlist. Per-server settings override this value.
+        """
+        return self._inherit_environment_default
+
     def _save_config(self):
         """Save the current server configurations back to the file."""
         config_data = {
             "mcpServers": {},
             "serverGroups": self.server_groups
         }
+        # Round-trip the top-level inheritance default only when non-default,
+        # keeping saved files clean for the common case.
+        if not self._inherit_environment_default:
+            config_data["inheritEnvironment"] = False
 
         for name, server_config in self.servers.items():
             config_dict = {
@@ -807,6 +910,8 @@ class MCPConfigManager:
                 config_dict["args"] = server_config.args
             if server_config.env:
                 config_dict["env"] = server_config.env
+            if server_config.inherit_environment is not None:
+                config_dict["inheritEnvironment"] = server_config.inherit_environment
             if server_config.url:
                 config_dict["url"] = server_config.url
             
@@ -995,9 +1100,15 @@ class MCPClientManager:
             logger.error(f"No command specified for stdio server: {server_name}")
             return False
         
-        # Set up environment variables: apply configured values, then strip
-        # keys explicitly marked for removal with a null (JSON null) value.
-        env = merge_server_env(os.environ, config.env)
+        # Set up environment variables: resolve inheritance mode, apply
+        # configured values, then strip keys explicitly marked for removal
+        # with a null (JSON null) value.
+        env = resolve_server_env(
+            os.environ,
+            config.env,
+            config.inherit_environment,
+            self.config_manager.get_inherit_environment_default(),
+        )
         if config.env:
             logger.info(
                 f"Setting environment variables for {server_name}: "
@@ -1009,6 +1120,14 @@ class MCPClientManager:
             for key, value in config.env.items():
                 if value is not None:
                     logger.debug(f"  {key}={'*' * len(value) if 'PASS' in key.upper() else value}")
+        if config.inherit_environment is False or (
+            config.inherit_environment is None
+            and not self.config_manager.get_inherit_environment_default()
+        ):
+            logger.info(
+                f"Minimal environment (inheritEnvironment=false) for {server_name}: "
+                f"{len(env)} keys"
+            )
         
         # Create stdio server parameters
         # Fix: Ensure args is properly formatted for StdioServerParams
