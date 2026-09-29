@@ -1,13 +1,14 @@
 # Roadmap — PEAK × mcp-parallax
 
 > **ARCHIVED 2026-09-27 — roadmap complete (M0–M4 ✅).** Final states:
-> PEAK fork `main` (PRs #9–#40 merged; findings 1, 3, 9, 10 RESOLVED and
+> PEAK fork `main` (PRs #9–#46 merged; findings 1, 3, 9, 10 RESOLVED and
 > implemented), parallax fork `main` at `62ef1bd` (PRs #107–#114).
 > Divergence ledger: 10 findings — 0 open. Environment hardening 2026-09-29:
 > null-key env removal (#39) + `inheritEnvironment` strict mode (#40),
 > egress-verified live; planner grounding enforced end-to-end (#32–#35,
-> hard-fail by default). 7B variance measured (`notes/7b-variance.md`):
-> grounding held 20/20 runs across both models.
+> hard-fail by default; fence extraction case-tolerant, #44). Local config
+> split: discovery → llama3.1:8b, planning → qwen2.5:7b; variance measured
+> (`notes/7b-variance.md`) — grounding held 20/20+10/10 runs.
 > Wrap-up: `project-wrapup.md`. Upstream engagement remains gated on an
 > explicit human decision (see `peak-integration-issue-draft.md`).
 
